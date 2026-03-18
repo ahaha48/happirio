@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>おみくじ占い</title>
+  <title>おみくじ占い ｜ Happirio</title>
+  <meta name="description" content="毎日一度、心を込めてお引きください。Happirioが届ける今日のご縁と運勢。">
   <style>
     * {
       margin: 0;
@@ -23,7 +24,6 @@
       color: #f5e6c8;
     }
 
-    /* 背景の桜 */
     .bg-petals {
       position: fixed;
       top: 0; left: 0;
@@ -55,7 +55,6 @@
       gap: 24px;
     }
 
-    /* ヘッダー */
     .header {
       text-align: center;
     }
@@ -72,7 +71,6 @@
       margin-top: 6px;
     }
 
-    /* おみくじ筒 */
     .shrine {
       display: flex;
       flex-direction: column;
@@ -125,7 +123,6 @@
       position: relative;
     }
 
-    /* 振るアニメーション */
     @keyframes shake {
       0%,100% { transform: rotate(0deg); }
       10% { transform: rotate(-8deg) translateX(-4px); }
@@ -262,6 +259,43 @@
 
     hr.divider { margin: 14px 0; }
 
+    /* ラッキー情報 */
+    .lucky-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 14px 0;
+    }
+    .lucky-card {
+      background: rgba(139,26,26,0.06);
+      border: 1px solid rgba(139,26,26,0.12);
+      border-radius: 6px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .lucky-card.wide {
+      grid-column: 1 / -1;
+      background: rgba(200,146,42,0.08);
+      border-color: rgba(200,146,42,0.2);
+    }
+    .lucky-label {
+      font-size: 0.6rem;
+      color: #8b6a3a;
+      letter-spacing: 0.15em;
+      margin-bottom: 4px;
+    }
+    .lucky-value {
+      font-size: 0.95rem;
+      color: #3a2010;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+    }
+    .lucky-card.wide .lucky-value {
+      font-size: 0.88rem;
+      font-weight: normal;
+      line-height: 1.5;
+    }
+
     .fortune-details {
       display: flex;
       flex-direction: column;
@@ -291,6 +325,130 @@
       flex: 1;
     }
 
+    /* シェアセクション */
+    .share-section {
+      text-align: center;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid #c8a87a;
+    }
+    .share-label {
+      font-size: 0.7rem;
+      color: #8b6a3a;
+      letter-spacing: 0.15em;
+      margin-bottom: 10px;
+    }
+    .share-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+    .share-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-family: inherit;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      border: none;
+    }
+    .share-btn-x {
+      background: #1a1a1a;
+      color: #fff;
+    }
+    .share-btn-x:hover { background: #333; }
+    .share-btn-line {
+      background: #06C755;
+      color: #fff;
+    }
+    .share-btn-line:hover { background: #05b04c; }
+
+    /* CTA セクション */
+    .cta-section {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid #c8a87a;
+    }
+    .cta-label {
+      font-size: 0.7rem;
+      color: #8b6a3a;
+      letter-spacing: 0.15em;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .cta-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .cta-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .cta-item:hover {
+      transform: translateX(4px);
+    }
+    .cta-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.9rem;
+    }
+    .cta-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .cta-title {
+      font-size: 0.82rem;
+      font-weight: bold;
+      line-height: 1.3;
+    }
+    .cta-desc {
+      font-size: 0.68rem;
+      margin-top: 2px;
+      opacity: 0.7;
+    }
+    .cta-item-kantei {
+      background: rgba(139,26,26,0.06);
+      border: 1px solid rgba(139,26,26,0.15);
+    }
+    .cta-item-kantei .cta-icon { background: rgba(139,26,26,0.15); color: #8b1a1a; }
+    .cta-item-kantei .cta-title { color: #6b1414; }
+    .cta-item-kantei .cta-desc  { color: #8b5a3a; }
+
+    .cta-item-note {
+      background: rgba(106,58,155,0.06);
+      border: 1px solid rgba(106,58,155,0.15);
+    }
+    .cta-item-note .cta-icon { background: rgba(106,58,155,0.15); color: #6a3a9b; }
+    .cta-item-note .cta-title { color: #5a2a8b; }
+    .cta-item-note .cta-desc  { color: #7a5a9a; }
+
+    .cta-item-booth {
+      background: rgba(200,146,42,0.08);
+      border: 1px solid rgba(200,146,42,0.2);
+    }
+    .cta-item-booth .cta-icon { background: rgba(200,146,42,0.15); color: #8b6a1a; }
+    .cta-item-booth .cta-title { color: #6b4a0a; }
+    .cta-item-booth .cta-desc  { color: #8b7a4a; }
+
     .retry-btn {
       width: 100%;
       background: transparent;
@@ -303,7 +461,7 @@
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.2s;
-      margin-top: 16px;
+      margin-top: 20px;
     }
     .retry-btn:hover {
       background: rgba(184,149,106,0.1);
@@ -317,14 +475,20 @@
       letter-spacing: 0.1em;
       text-align: center;
     }
-    .nav-link {
+    .footer a {
       color: #b8956a;
-      font-size: 0.8rem;
-      letter-spacing: 0.1em;
       text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
+    }
+    .footer a:hover { text-decoration: underline; }
+
+    /* ナビ */
+    .nav-link {
+      display: inline-block;
+      font-size: 0.78rem;
+      color: #b8956a;
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      padding: 6px 0;
       transition: color 0.2s;
     }
     .nav-link:hover { color: #e8c97a; }
@@ -370,6 +534,7 @@
   </style>
 </head>
 <body>
+
 <audio id="bgm" src="静穏みくじの庭.mp3" loop></audio>
 <div class="bgm-ctrl">
   <div class="bgm-volume-panel panel-hidden" id="volPanel">
@@ -381,13 +546,10 @@
   <button class="bgm-toggle" id="bgmToggle" onclick="toggleBGM()">🎵</button>
 </div>
 
-<!-- 背景の花びら -->
 <div class="bg-petals" id="bgPetals"></div>
 
 <div class="container">
-  <div style="width:100%;max-width:420px;">
-    <a href="../index.html" class="nav-link">← 占いトップへ</a>
-  </div>
+  <a href="../index.html" class="nav-link">← 占いトップへ</a>
   <div class="header">
     <h1>おみくじ</h1>
     <p>〜 今日のご縁を占います 〜</p>
@@ -409,16 +571,57 @@
       <div class="card-title">— 御 神 籤 —</div>
       <div class="fortune-rank" id="fortuneRank"></div>
       <div class="fortune-sub" id="fortuneSub"></div>
+
       <hr class="divider">
       <div class="poem" id="poem"></div>
+
+      <hr class="divider">
+      <div class="lucky-section" id="luckySection"></div>
+
       <hr class="divider">
       <div class="fortune-details" id="fortuneDetails"></div>
+
+      <!-- シェアボタン -->
+      <div class="share-section">
+        <div class="share-label">今日の運勢をシェアする</div>
+        <div class="share-buttons">
+          <button class="share-btn share-btn-x" onclick="shareX()">𝕏 ポスト</button>
+          <button class="share-btn share-btn-line" onclick="shareLINE()">LINE</button>
+        </div>
+      </div>
+
+      <!-- 収益導線 -->
+      <div class="cta-section">
+        <div class="cta-label">〜 Happirio の開運アイテム 〜</div>
+        <div class="cta-list">
+          <a class="cta-item cta-item-booth" href="https://happirio.booth.pm/" target="_blank" rel="noopener">
+            <div class="cta-icon">✦</div>
+            <div class="cta-body">
+              <div class="cta-title">開運待受画像を手に入れる</div>
+              <div class="cta-desc">あなたのラッキーカラーの待受 ／ BOOTH ¥300〜</div>
+            </div>
+          </a>
+          <a class="cta-item cta-item-note" href="https://note.com/happirio" target="_blank" rel="noopener">
+            <div class="cta-icon">✎</div>
+            <div class="cta-body">
+              <div class="cta-title">今月の開運ガイドを読む</div>
+              <div class="cta-desc">開運カラー解説＋待受画像セット ／ note ¥500〜</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
       <button class="retry-btn" onclick="reset()">もう一度引く</button>
     </div>
     <div class="card-bottom-border"></div>
   </div>
 
-  <div class="footer">毎日一度、心を込めてお引きください</div>
+  <div class="footer">
+    毎日一度、心を込めてお引きください<br>
+    <span style="margin-top:4px;display:inline-block">
+      <a href="https://x.com/Happirio_" target="_blank">Happirio</a>
+    </span>
+  </div>
 </div>
 
 <script>
@@ -427,12 +630,57 @@
   for (let i = 0; i < 18; i++) {
     const p = document.createElement('div');
     p.className = 'petal';
-    p.textContent = ['🌸','✿','❀','🌺'][Math.floor(Math.random()*4)];
+    p.textContent = ['\u{1F338}','\u273F','\u2740','\u{1F33A}'][Math.floor(Math.random()*4)];
     p.style.left = Math.random() * 100 + 'vw';
     p.style.animationDuration = (8 + Math.random() * 12) + 's';
     p.style.animationDelay = (Math.random() * 15) + 's';
     p.style.fontSize = (0.8 + Math.random() * 1.2) + 'rem';
     petals.appendChild(p);
+  }
+
+  // ラッキー情報のプール
+  const luckyItems = [
+    'ミントティー','赤い傘','手書きの手紙','木のスプーン','小さな花束',
+    'レモンキャンディ','お気に入りの本','白いハンカチ','銀色のペン','焼きたてパン',
+    '柑橘系の香水','革のブックカバー','手作りクッキー','古い写真','青い石',
+    'シナモンの香り','窓辺の植物','オルゴール','和紙のメモ帳','桜の箸置き',
+  ];
+  const luckyColors = [
+    '桜色','若葉色','藍色','珊瑚色','山吹色',
+    '藤色','翡翠色','茜色','月白','鴇色',
+    '萌黄','群青','紅梅色','浅葱色','胡桃色',
+  ];
+  const luckyActions = [
+    '窓を開けて深呼吸してみよう',
+    '普段通らない道を歩いてみよう',
+    '久しぶりの人にメッセージを送ろう',
+    '今日は少しだけ早起きしてみよう',
+    'お気に入りの音楽を聴きながら散歩しよう',
+    '手書きで日記を書いてみよう',
+    '空を見上げて雲の形を探してみよう',
+    '好きな飲み物をゆっくり味わおう',
+    '部屋の小さな模様替えをしてみよう',
+    '今日の夕焼けを写真に撮ってみよう',
+    '感謝の気持ちを言葉にして伝えよう',
+    '新しいレシピに挑戦してみよう',
+    '一駅分だけ歩いてみよう',
+    'お花を一輪買って帰ろう',
+    '寝る前にストレッチをしてみよう',
+  ];
+
+  // 日付シードで当日固定のランダム選択
+  function seededRandom(seed) {
+    let x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  }
+  function getTodaySeed() {
+    const d = new Date();
+    return d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate();
+  }
+  function pickFromArray(arr, offset) {
+    const seed = getTodaySeed() + offset;
+    const idx = Math.floor(seededRandom(seed) * arr.length);
+    return arr[idx];
   }
 
   const fortunes = [
@@ -515,8 +763,7 @@
     },
   ];
 
-  // 確率重み付き
-  const weights = [15, 20, 20, 20, 15, 7, 3]; // 大吉〜大凶
+  const weights = [15, 20, 20, 20, 15, 7, 3];
 
   function weightedRandom() {
     const total = weights.reduce((a, b) => a + b, 0);
@@ -535,7 +782,6 @@
     return audioCtx;
   }
 
-  // カラカラと筒を振る音（短いノイズバースト×複数）
   function playShakeSound() {
     const ctx = getCtx();
     const count = 18;
@@ -544,55 +790,45 @@
       const buf = ctx.createBuffer(1, ctx.sampleRate * 0.04, ctx.sampleRate);
       const data = buf.getChannelData(0);
       for (let j = 0; j < data.length; j++) data[j] = (Math.random() * 2 - 1) * 0.6;
-
       const src = ctx.createBufferSource();
       src.buffer = buf;
-
       const bpf = ctx.createBiquadFilter();
       bpf.type = 'bandpass';
       bpf.frequency.value = 2800 + Math.random() * 800;
       bpf.Q.value = 1.2;
-
       const gain = ctx.createGain();
       gain.gain.setValueAtTime(0.28, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.038);
-
       src.connect(bpf).connect(gain).connect(ctx.destination);
       src.start(t);
       src.stop(t + 0.04);
     }
   }
 
-  // 紙をめくる音（ホワイトノイズのスウィープ）
   function playUnfoldSound() {
     const ctx = getCtx();
     const dur = 0.45;
     const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
     const data = buf.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1);
-
     const src = ctx.createBufferSource();
     src.buffer = buf;
-
     const bpf = ctx.createBiquadFilter();
     bpf.type = 'bandpass';
     bpf.frequency.setValueAtTime(800, ctx.currentTime);
     bpf.frequency.linearRampToValueAtTime(3200, ctx.currentTime + 0.2);
     bpf.frequency.linearRampToValueAtTime(600, ctx.currentTime + dur);
     bpf.Q.value = 0.8;
-
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.0, ctx.currentTime);
     gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.05);
     gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.3);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-
     src.connect(bpf).connect(gain).connect(ctx.destination);
     src.start(ctx.currentTime);
     src.stop(ctx.currentTime + dur);
   }
 
-  // チーンと鳴る鈴の音
   function playBellSound(freq = 880, delay = 0) {
     const ctx = getCtx();
     const t = ctx.currentTime + delay;
@@ -600,13 +836,10 @@
     osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, t);
     osc.frequency.exponentialRampToValueAtTime(freq * 0.92, t + 1.2);
-
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.0, t);
     gain.gain.linearRampToValueAtTime(0.35, t + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
-
-    // 倍音を少し追加してリアルな鈴音に
     const osc2 = ctx.createOscillator();
     osc2.type = 'sine';
     osc2.frequency.setValueAtTime(freq * 2.76, t);
@@ -614,17 +847,15 @@
     gain2.gain.setValueAtTime(0.0, t);
     gain2.gain.linearRampToValueAtTime(0.08, t + 0.01);
     gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
-
     osc.connect(gain).connect(ctx.destination);
     osc2.connect(gain2).connect(ctx.destination);
     osc.start(t); osc.stop(t + 1.9);
     osc2.start(t); osc2.stop(t + 0.7);
   }
 
-  // 大吉用ファンファーレ（明るい和音の連打）
   function playFanfare() {
     const ctx = getCtx();
-    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+    const notes = [523.25, 659.25, 783.99, 1046.50];
     notes.forEach((freq, i) => {
       const t = ctx.currentTime + i * 0.12;
       const osc = ctx.createOscillator();
@@ -639,7 +870,6 @@
     });
   }
 
-  // 大凶用 低く暗い音
   function playDarkSound() {
     const ctx = getCtx();
     const t = ctx.currentTime;
@@ -655,7 +885,6 @@
       osc.start(t + i * 0.1); osc.stop(t + i * 0.1 + 1.3);
     });
   }
-  // ---- ここまでSE ----
 
   function getTodayString() {
     const d = new Date();
@@ -678,6 +907,10 @@
     } catch (e) { return null; }
   }
 
+  // 現在の結果（シェア用に保持）
+  let currentFortune = null;
+  let currentLucky = null;
+
   function drawOmikuji() {
     if (checkAlreadyDrawn()) return;
     const btn = document.getElementById('drawBtn');
@@ -687,7 +920,6 @@
 
     playShakeSound();
 
-    // 振るアニメーション
     tube.classList.add('shaking');
     setTimeout(() => {
       tube.classList.remove('shaking');
@@ -704,8 +936,16 @@
       fortuneIndex = getStoredFortuneIndex();
     }
     const fortune = fortunes[fortuneIndex];
+    currentFortune = fortune;
 
-    // SE：紙をめくる音 → 鈴 → 運勢別SE（新規引いた時のみ）
+    // 日付シードでラッキー情報を固定
+    currentLucky = {
+      item: pickFromArray(luckyItems, 1),
+      color: pickFromArray(luckyColors, 2),
+      action: pickFromArray(luckyActions, 3),
+    };
+
+    // SE
     if (isNew) {
       playUnfoldSound();
       playBellSound(880, 0.15);
@@ -714,7 +954,7 @@
       } else if (fortune.cls === 'daikyo') {
         setTimeout(playDarkSound, 350);
       } else {
-        playBellSound(660, 0.45); // 通常運勢は余韻の鈴
+        playBellSound(660, 0.45);
       }
     }
 
@@ -723,6 +963,24 @@
     document.getElementById('fortuneSub').textContent = fortune.sub;
     document.getElementById('poem').textContent = fortune.poem;
 
+    // ラッキー情報
+    const luckyEl = document.getElementById('luckySection');
+    luckyEl.innerHTML = `
+      <div class="lucky-card">
+        <div class="lucky-label">LUCKY ITEM</div>
+        <div class="lucky-value">${currentLucky.item}</div>
+      </div>
+      <div class="lucky-card">
+        <div class="lucky-label">LUCKY COLOR</div>
+        <div class="lucky-value">${currentLucky.color}</div>
+      </div>
+      <div class="lucky-card wide">
+        <div class="lucky-label">TODAY'S ACTION</div>
+        <div class="lucky-value">${currentLucky.action}</div>
+      </div>
+    `;
+
+    // 詳細
     const detailsEl = document.getElementById('fortuneDetails');
     detailsEl.innerHTML = '';
     fortune.details.forEach(d => {
@@ -740,7 +998,6 @@
       card.classList.add('show');
     });
 
-    // 結果までスクロール（新規のみ）
     if (isNew) {
       setTimeout(() => {
         card.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -749,7 +1006,6 @@
 
     document.getElementById('shrine').style.opacity = '0.4';
 
-    // 1日1回制限：リトライボタンを無効化
     const retryBtn = document.querySelector('.retry-btn');
     retryBtn.textContent = 'また明日お越しください';
     retryBtn.disabled = true;
@@ -766,23 +1022,26 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // ページ読み込み時：本日すでに引いていれば結果を復元
-  document.addEventListener('DOMContentLoaded', () => {
-    if (checkAlreadyDrawn()) {
-      document.getElementById('drawBtn').disabled = true;
-      showResult(false);
-    }
-  });
+  // SNSシェア
+  function shareX() {
+    if (!currentFortune || !currentLucky) return;
+    const text = `今日のおみくじは【${currentFortune.rank}】\nLucky item: ${currentLucky.item}\nLucky color: ${currentLucky.color}\n\n${currentLucky.action}\n\n#おみくじ #今日の運勢 #Happirio`;
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${url}`, '_blank');
+  }
 
-  // =========================================
+  function shareLINE() {
+    if (!currentFortune || !currentLucky) return;
+    const text = `今日のおみくじは【${currentFortune.rank}】\nLucky item: ${currentLucky.item}\nLucky color: ${currentLucky.color}\n${currentLucky.action}`;
+    window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(text)}`, '_blank');
+  }
+
   // BGM
-  // =========================================
   let bgmStarted = false;
   let bgmMuted = false;
   let volPanelOpen = false;
   const bgmEl = document.getElementById('bgm');
   bgmEl.volume = 0.35;
-
   function startBGM() {
     if (bgmStarted) return;
     bgmStarted = true;
@@ -790,7 +1049,6 @@
   }
   document.addEventListener('click',      () => startBGM(), { once: true });
   document.addEventListener('touchstart', () => startBGM(), { once: true });
-
   function toggleBGM() {
     if (!bgmStarted) startBGM();
     volPanelOpen = !volPanelOpen;
@@ -804,7 +1062,6 @@
       document.getElementById('bgmToggle').textContent = bgmMuted ? '🔇' : '🎵';
     }
   }
-
   function onVolChange(slider) {
     const val = parseInt(slider.value);
     bgmEl.volume = val / 100;
@@ -814,6 +1071,14 @@
     document.getElementById('volPct').textContent = val + '%';
     slider.style.setProperty('--val', val + '%');
   }
+
+  // ページ読み込み時：本日すでに引いていれば結果を復元
+  document.addEventListener('DOMContentLoaded', () => {
+    if (checkAlreadyDrawn()) {
+      document.getElementById('drawBtn').disabled = true;
+      showResult(false);
+    }
+  });
 </script>
 </body>
 </html>
