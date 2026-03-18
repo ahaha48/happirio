@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happirio ｜ 開運・占いポータル</title>
+<meta name="description" content="Happirio の無料占いポータル。おみくじ・タロット・星座占いで今日の運勢を知りましょう。">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body {
+  font-family: 'Hiragino Mincho ProN','Yu Mincho',serif;
+  background: #08081c;
+  min-height: 100vh;
+  color: #e0d8f0;
+  overflow-x: hidden;
+}
+#starCanvas {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; width: 100%; height: 100%;
+}
+.container {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 480px;
+  margin: 0 auto;
+  padding: 48px 20px 56px;
+  display: flex; flex-direction: column; align-items: center; gap: 32px;
+}
+
+/* ブランドヘッダー */
+.brand {
+  text-align: center;
+}
+.brand-kamon {
+  font-size: 2.4rem;
+  margin-bottom: 12px;
+  opacity: 0.85;
+  animation: rotate-slow 20s linear infinite;
+  display: inline-block;
+}
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.brand h1 {
+  font-size: 3rem;
+  letter-spacing: 0.5em;
+  color: #d4b8f0;
+  text-shadow:
+    0 0 30px rgba(180,120,240,0.6),
+    0 0 60px rgba(180,120,240,0.25);
+  line-height: 1;
+}
+.brand-en {
+  font-size: 0.7rem;
+  letter-spacing: 0.4em;
+  color: #7868a8;
+  margin-top: 6px;
+}
+.brand-sub {
+  font-size: 0.85rem;
+  color: #9888b8;
+  letter-spacing: 0.2em;
+  margin-top: 14px;
+  line-height: 1.8;
+}
+
+/* 区切り */
+.divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #3a2a5a;
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid #2a1a4a;
+}
+
+/* 占いカード */
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+.card-link {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 20px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.card-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.card-link:hover {
+  transform: translateY(-3px);
+}
+.card-link:hover::before {
+  opacity: 1;
+}
+.card-link:active {
+  transform: translateY(1px);
+}
+
+/* おみくじカード */
+.card-omikuji {
+  background: linear-gradient(135deg, #1c0808, #2a0f0f);
+  border: 1px solid #5a1a1a;
+}
+.card-omikuji::before {
+  background: linear-gradient(135deg, rgba(232,201,122,0.06), transparent);
+}
+.card-omikuji:hover {
+  box-shadow: 0 8px 30px rgba(200,146,42,0.2);
+  border-color: #9b2020;
+}
+.card-omikuji .card-icon { color: #e8c97a; }
+.card-omikuji .card-title { color: #e8c97a; }
+.card-omikuji .card-desc { color: #8b6040; }
+.card-omikuji .card-arrow { color: #8b4a2a; }
+
+/* タロットカード */
+.card-tarot {
+  background: linear-gradient(135deg, #0e0818, #1a1030);
+  border: 1px solid #5a2a8a;
+}
+.card-tarot::before {
+  background: linear-gradient(135deg, rgba(200,168,232,0.06), transparent);
+}
+.card-tarot:hover {
+  box-shadow: 0 8px 30px rgba(180,120,240,0.2);
+  border-color: #8840c8;
+}
+.card-tarot .card-icon { color: #c8a8e8; }
+.card-tarot .card-title { color: #c8a8e8; }
+.card-tarot .card-desc { color: #6858a0; }
+.card-tarot .card-arrow { color: #6838a8; }
+
+/* ホロスコープカード */
+.card-horoscope {
+  background: linear-gradient(135deg, #060c1e, #0e1430);
+  border: 1px solid #2a3a7a;
+}
+.card-horoscope::before {
+  background: linear-gradient(135deg, rgba(168,192,240,0.06), transparent);
+}
+.card-horoscope:hover {
+  box-shadow: 0 8px 30px rgba(100,130,220,0.2);
+  border-color: #4060b8;
+}
+.card-horoscope .card-icon { color: #a8c0f0; }
+.card-horoscope .card-title { color: #a8c0f0; }
+.card-horoscope .card-desc { color: #506088; }
+.card-horoscope .card-arrow { color: #3a4a88; }
+
+.card-icon {
+  font-size: 2.4rem;
+  width: 52px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.card-body {
+  flex: 1;
+  min-width: 0;
+}
+.card-title {
+  font-size: 1.15rem;
+  letter-spacing: 0.15em;
+  font-weight: bold;
+  line-height: 1;
+}
+.card-desc {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  margin-top: 6px;
+  line-height: 1.6;
+}
+.card-arrow {
+  font-size: 1rem;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.card-link:hover .card-arrow {
+  transform: translateX(4px);
+}
+
+/* 和柄アクセント */
+.washi-accent {
+  width: 100%;
+  text-align: center;
+  font-size: 0.65rem;
+  color: #2a1a4a;
+  letter-spacing: 0.5em;
+}
+
+/* フッター */
+.footer {
+  text-align: center;
+  font-size: 0.72rem;
+  color: #3a2a5a;
+  letter-spacing: 0.15em;
+  line-height: 2;
+}
+.footer a {
+  color: #5a4a7a;
+  text-decoration: none;
+}
+.footer a:hover {
+  color: #a888d0;
+  text-decoration: underline;
+}
+
+@media(max-width:380px){
+  .brand h1 { font-size: 2.4rem; }
+  .card-link { padding: 16px; gap: 14px; }
+  .card-icon { font-size: 2rem; width: 44px; }
+}
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+
+<div class="container">
+
+  <!-- ブランドヘッダー -->
+  <div class="brand">
+    <div class="brand-kamon">✦</div>
+    <h1>Happirio</h1>
+    <div class="brand-en">KAIUN &amp; URANAI PORTAL</div>
+    <p class="brand-sub">
+      星と縁と神のお告げで<br>
+      あなたの今日を照らします
+    </p>
+  </div>
+
+  <div class="divider">無 料 占 い</div>
+
+  <!-- 占いカード一覧 -->
+  <div class="cards">
+    <a class="card-link card-omikuji" href="./omikuji/">
+      <div class="card-icon">🎋</div>
+      <div class="card-body">
+        <div class="card-title">おみくじ占い</div>
+        <div class="card-desc">大吉から大凶まで七段階。<br>今日の縁と運気を神様に問います。</div>
+      </div>
+      <div class="card-arrow">›</div>
+    </a>
+
+    <a class="card-link card-tarot" href="./tarot/">
+      <div class="card-icon">🔮</div>
+      <div class="card-body">
+        <div class="card-title">タロット占い</div>
+        <div class="card-desc">大アルカナ22枚が導く宇宙の意志。<br>一枚引きと二者択一から選べます。</div>
+      </div>
+      <div class="card-arrow">›</div>
+    </a>
+
+    <a class="card-link card-horoscope" href="./horoscope/">
+      <div class="card-icon">⭐</div>
+      <div class="card-body">
+        <div class="card-title">星座占い</div>
+        <div class="card-desc">12星座の今日の総合・恋愛・仕事運。<br>ラッキーアイテムと行動指針も。</div>
+      </div>
+      <div class="card-arrow">›</div>
+    </a>
+  </div>
+
+  <div class="washi-accent">❖ ❖ ❖</div>
+
+  <!-- フッター -->
+  <div class="footer">
+    毎日のひとときを、開運と共に<br>
+    <a href="https://x.com/Happirio_" target="_blank" rel="noopener">Happirio</a>
+    &nbsp;／&nbsp;
+    <a href="https://happirio.booth.pm/" target="_blank" rel="noopener">BOOTH</a>
+    &nbsp;／&nbsp;
+    <a href="https://note.com/happirio" target="_blank" rel="noopener">note</a>
+  </div>
+
+</div>
+
+<script>
+// 星空 Canvas
+(function() {
+  const canvas = document.getElementById('starCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, dpr, stars = [], shooters = [];
+  let lastShooter = 0, nextDelay = 4000 + Math.random() * 5000;
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    genStars();
+  }
+
+  function genStars() {
+    stars = [];
+    const count = Math.min(Math.floor(W * H / 4800), 200);
+    for (let i = 0; i < count; i++) {
+      const r = Math.random();
+      const size = r < 0.05 ? 1.8 + Math.random() * 0.9
+                 : r < 0.25 ? 0.9 + Math.random() * 0.7
+                 :             0.3 + Math.random() * 0.5;
+      const cr = Math.random();
+      const color = cr < 0.12 ? {h:220,s:60}
+                  : cr < 0.22 ? {h:270,s:50}
+                  : cr < 0.28 ? {h:40,s:40}   // 和の金色ニュアンス
+                  : null;
+      stars.push({
+        x: Math.random()*W, y: Math.random()*H, size,
+        baseAlpha: 0.3 + Math.random() * 0.7,
+        speed: 0.2 + Math.random() * 1.0,
+        phase: Math.random() * Math.PI * 2,
+        color
+      });
+    }
+  }
+
+  function spawnShooter() {
+    const angle = (25 + Math.random() * 30) * Math.PI / 180;
+    const speed = 4 + Math.random() * 5;
+    shooters.push({
+      x: W * (0.1 + Math.random() * 0.8), y: H * Math.random() * 0.4,
+      vx: -Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      len: 80 + Math.random() * 120, life: 1.0,
+      decay: 0.011 + Math.random() * 0.013
+    });
+  }
+
+  function draw(ts) {
+    ctx.clearRect(0, 0, W, H);
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#040412');
+    bg.addColorStop(0.4, '#06061a');
+    bg.addColorStop(1, '#080820');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+    const t = ts * 0.001;
+    for (const s of stars) {
+      const tw = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
+      const a = s.baseAlpha * tw;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+      ctx.fillStyle = s.color ? `hsla(${s.color.h},${s.color.s}%,90%,${a})` : `rgba(255,255,255,${a})`;
+      if (s.size > 1.4) {
+        ctx.shadowBlur = s.size * 4;
+        ctx.shadowColor = s.color ? `hsl(${s.color.h},70%,85%)` : 'rgba(180,200,255,0.8)';
+      } else { ctx.shadowBlur = 0; }
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    if (ts - lastShooter > nextDelay) {
+      lastShooter = ts; nextDelay = 4000 + Math.random() * 7000;
+      spawnShooter();
+      if (Math.random() < 0.15) setTimeout(spawnShooter, 300 + Math.random() * 400);
+    }
+    for (let i = shooters.length - 1; i >= 0; i--) {
+      const sh = shooters[i];
+      sh.x += sh.vx; sh.y += sh.vy; sh.life -= sh.decay;
+      if (sh.life <= 0 || sh.x < -80 || sh.y > H + 80) { shooters.splice(i, 1); continue; }
+      const nx = sh.vx / Math.hypot(sh.vx, sh.vy), ny = sh.vy / Math.hypot(sh.vx, sh.vy);
+      const tl = sh.len * sh.life, tx = sh.x - nx * tl, ty = sh.y - ny * tl;
+      const grad = ctx.createLinearGradient(tx, ty, sh.x, sh.y);
+      grad.addColorStop(0, 'rgba(180,200,255,0)');
+      grad.addColorStop(0.5, `rgba(200,220,255,${sh.life * 0.3})`);
+      grad.addColorStop(1, `rgba(255,255,255,${sh.life * 0.9})`);
+      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(sh.x, sh.y);
+      ctx.strokeStyle = grad; ctx.lineWidth = 1.6 * sh.life; ctx.lineCap = 'round'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(sh.x, sh.y, 2.0 * sh.life, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${sh.life})`;
+      ctx.shadowBlur = 8 * sh.life; ctx.shadowColor = 'rgba(180,200,255,0.9)'; ctx.fill(); ctx.shadowBlur = 0;
+    }
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', () => setTimeout(resize, 100));
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星座占い ｜ Happirio</title>
+<meta name="description" content="12星座の今日の運勢をお届けします。あなたの星が導く一日を覗いてみませんか。">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body {
+  font-family:'Hiragino Mincho ProN','Yu Mincho',serif;
+  background:#0a0a1e;
+  min-height:100vh;
+  color:#d8d0e8;
+  overflow-x:hidden;
+}
+#starCanvas {
+  position:fixed;inset:0;z-index:0;
+  pointer-events:none;width:100%;height:100%;
+}
+.container {
+  position:relative;z-index:1;
+  width:100%;max-width:420px;
+  margin:0 auto;
+  padding:28px 16px 40px;
+  display:flex;flex-direction:column;align-items:center;gap:20px;
+}
+
+.header{text-align:center;}
+.header h1{
+  font-size:2rem;letter-spacing:0.35em;
+  color:#a8c0f0;
+  text-shadow:0 0 20px rgba(120,160,240,0.5);
+}
+.header p{font-size:0.8rem;color:#6878a8;letter-spacing:0.12em;margin-top:6px;}
+
+/* 星座グリッド */
+.zodiac-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:10px;width:100%;max-width:360px;
+}
+.zodiac-btn{
+  background:linear-gradient(160deg,#121230,#0e0e28);
+  border:1px solid #2a2a5a;border-radius:12px;
+  padding:14px 4px 10px;
+  cursor:pointer;color:#d8d0e8;font-family:inherit;
+  text-align:center;transition:all 0.2s;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.zodiac-btn:hover{border-color:#6888c8;box-shadow:0 0 14px rgba(100,130,220,0.25);transform:translateY(-2px);}
+.zodiac-btn.selected{border-color:#a8c0f0;background:linear-gradient(160deg,#1a1a48,#141438);box-shadow:0 0 18px rgba(120,160,240,0.3);}
+.zodiac-symbol{font-size:1.5rem;line-height:1;}
+.zodiac-name{font-size:0.65rem;letter-spacing:0.08em;color:#8898c8;}
+.zodiac-date{font-size:0.5rem;color:#505878;margin-top:1px;}
+
+/* 生年月日フォールバック */
+.birthday-section{
+  width:100%;max-width:360px;text-align:center;
+}
+.birthday-toggle{
+  background:none;border:none;color:#506088;font-family:inherit;
+  font-size:0.72rem;letter-spacing:0.1em;cursor:pointer;
+  padding:4px 0;transition:color 0.2s;
+}
+.birthday-toggle:hover{color:#a8c0f0;}
+.birthday-form{
+  margin-top:10px;display:none;
+  flex-direction:column;align-items:center;gap:10px;
+}
+.birthday-form.show{display:flex;}
+.birthday-input{
+  width:200px;background:#121230;border:1px solid #2a2a5a;border-radius:8px;
+  color:#d8d0e8;font-family:inherit;font-size:0.9rem;padding:10px 14px;
+  outline:none;text-align:center;transition:border-color 0.2s;
+}
+.birthday-input:focus{border-color:#6888c8;}
+
+/* 占うボタン */
+.divine-btn{
+  width:100%;max-width:360px;
+  background:linear-gradient(135deg,#1a3080,#3050b0,#1a3080);
+  border:none;border-radius:30px;padding:14px;
+  color:#e0e8ff;font-family:inherit;font-size:1.05rem;letter-spacing:0.25em;
+  cursor:pointer;
+  box-shadow:0 4px 18px rgba(48,80,176,0.4);transition:all 0.2s;
+  font-weight:bold;
+}
+.divine-btn:hover{box-shadow:0 6px 26px rgba(80,120,220,0.5);transform:translateY(-2px);}
+.divine-btn:active{transform:translateY(1px);}
+.divine-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+
+/* 結果カード */
+.result-card{
+  width:100%;
+  background:linear-gradient(180deg,#10102a 0%,#0c0c22 100%);
+  border:1px solid #2a2a5a;
+  border-radius:16px;
+  overflow:hidden;
+  display:none;
+  animation:resultIn 0.6s ease-out;
+}
+@keyframes resultIn{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.result-card.show{display:block;}
+
+.result-header{
+  background:linear-gradient(135deg,#141440,#1a1a50);
+  padding:20px 20px 16px;text-align:center;
+  border-bottom:1px solid #2a2a5a;
+}
+.result-zodiac-symbol{font-size:2.4rem;margin-bottom:4px;}
+.result-zodiac-name{font-size:1.6rem;letter-spacing:0.2em;color:#a8c0f0;font-weight:bold;}
+.result-zodiac-en{font-size:0.7rem;color:#506088;letter-spacing:0.15em;margin-top:2px;}
+.result-date{font-size:0.7rem;color:#506088;margin-top:8px;letter-spacing:0.1em;}
+
+.result-body{padding:20px;}
+
+/* 運勢カテゴリ */
+.fortune-category{
+  margin-bottom:16px;
+  padding-bottom:16px;
+  border-bottom:1px solid rgba(42,42,90,0.5);
+}
+.fortune-category:last-of-type{border-bottom:none;margin-bottom:12px;padding-bottom:12px;}
+.fortune-cat-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:6px;
+}
+.fortune-cat-label{
+  font-size:0.7rem;letter-spacing:0.2em;
+  padding:3px 10px;border-radius:4px;
+}
+.fortune-cat-label.general{color:#a8c0f0;border:1px solid #3a4a8a;}
+.fortune-cat-label.love{color:#e0a0c0;border:1px solid #8a3a6a;}
+.fortune-cat-label.work{color:#a0c8a0;border:1px solid #3a7a4a;}
+.fortune-stars{
+  font-size:0.8rem;letter-spacing:2px;
+}
+.star-on{color:#e8c060;}
+.star-off{color:#2a2a4a;}
+.fortune-cat-text{
+  font-size:0.82rem;color:#b8b0d0;line-height:1.7;
+}
+
+/* ラッキーセクション */
+.lucky-section{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  margin:16px 0;
+}
+.lucky-card{
+  background:rgba(30,30,70,0.6);
+  border:1px solid #2a2a5a;border-radius:8px;
+  padding:10px 12px;text-align:center;
+}
+.lucky-card.wide{grid-column:1/-1;background:rgba(26,48,128,0.15);border-color:rgba(48,80,176,0.3);}
+.lucky-label{font-size:0.6rem;color:#6878a8;letter-spacing:0.15em;margin-bottom:4px;}
+.lucky-value{font-size:0.92rem;color:#c8c0e0;font-weight:bold;letter-spacing:0.05em;}
+.lucky-card.wide .lucky-value{font-size:0.85rem;font-weight:normal;line-height:1.5;}
+
+/* シェア */
+.share-section{
+  text-align:center;margin-top:16px;padding-top:16px;
+  border-top:1px solid #2a2a5a;
+}
+.share-label{font-size:0.7rem;color:#506088;letter-spacing:0.15em;margin-bottom:10px;}
+.share-buttons{display:flex;justify-content:center;gap:12px;}
+.share-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px 20px;border-radius:20px;font-size:0.75rem;
+  font-family:inherit;letter-spacing:0.1em;cursor:pointer;
+  transition:all 0.2s;text-decoration:none;border:none;
+}
+.share-btn-x{background:#1a1a1a;color:#fff;}
+.share-btn-x:hover{background:#333;}
+.share-btn-line{background:#06C755;color:#fff;}
+.share-btn-line:hover{background:#05b04c;}
+
+/* CTA */
+.cta-section{margin-top:16px;padding-top:16px;border-top:1px solid #2a2a5a;}
+.cta-label{font-size:0.7rem;color:#506088;letter-spacing:0.15em;margin-bottom:12px;text-align:center;}
+.cta-list{display:flex;flex-direction:column;gap:8px;}
+.cta-item{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:8px;
+  cursor:pointer;transition:all 0.2s;text-decoration:none;color:inherit;
+}
+.cta-item:hover{transform:translateX(4px);}
+.cta-icon{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem;
+}
+.cta-body{flex:1;min-width:0;}
+.cta-title{font-size:0.82rem;font-weight:bold;line-height:1.3;}
+.cta-desc{font-size:0.68rem;margin-top:2px;opacity:0.6;}
+.cta-item-booth{background:rgba(26,48,128,0.12);border:1px solid rgba(48,80,176,0.25);}
+.cta-item-booth .cta-icon{background:rgba(48,80,176,0.2);color:#6888c8;}
+.cta-item-booth .cta-title{color:#8098d0;}
+.cta-item-booth .cta-desc{color:#506088;}
+.cta-item-note{background:rgba(80,40,120,0.12);border:1px solid rgba(100,60,160,0.25);}
+.cta-item-note .cta-icon{background:rgba(100,60,160,0.2);color:#9878c8;}
+.cta-item-note .cta-title{color:#a888d0;}
+.cta-item-note .cta-desc{color:#6858a0;}
+
+/* リトライ */
+.retry-btn{
+  width:100%;max-width:360px;
+  background:none;border:1px solid #2a2a5a;border-radius:8px;
+  color:#506088;font-family:inherit;font-size:0.85rem;
+  letter-spacing:0.2em;padding:11px;cursor:pointer;transition:all 0.2s;
+  margin-top:8px;
+}
+.retry-btn:hover{border-color:#a8c0f0;color:#a8c0f0;}
+
+.footer{
+  font-size:0.7rem;color:#303858;letter-spacing:0.1em;text-align:center;
+  margin-top:8px;
+}
+.footer a{color:#506088;text-decoration:none;}
+.footer a:hover{text-decoration:underline;}
+
+.bgm-ctrl{
+  position:fixed;bottom:16px;right:16px;z-index:100;
+  display:flex;flex-direction:column;align-items:flex-end;gap:8px;
+}
+.bgm-toggle{
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(10,10,40,0.9);border:1px solid #2a2a5a;
+  cursor:pointer;font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color 0.2s,box-shadow 0.2s;
+  backdrop-filter:blur(4px);
+}
+.bgm-toggle:hover{border-color:#a8c0f0;box-shadow:0 0 12px rgba(120,160,240,0.3);}
+.bgm-volume-panel{
+  background:rgba(10,10,40,0.92);border:1px solid #2a2a5a;
+  border-radius:20px;padding:8px 14px;
+  display:flex;align-items:center;gap:8px;
+  backdrop-filter:blur(6px);
+  transition:opacity 0.2s,transform 0.2s;
+}
+.bgm-volume-panel.panel-hidden{
+  opacity:0;pointer-events:none;
+  transform:translateY(6px) scale(0.95);
+}
+.vol-icon{font-size:0.85rem;}
+.vol-slider{
+  -webkit-appearance:none;appearance:none;
+  width:90px;height:3px;
+  background:linear-gradient(to right,#3050b0 var(--val,35%),#1a1a3a var(--val,35%));
+  border-radius:2px;outline:none;cursor:pointer;
+}
+.vol-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;
+  border-radius:50%;background:#a8c0f0;
+  box-shadow:0 0 6px rgba(120,160,240,0.5);cursor:pointer;
+}
+.vol-pct{font-size:0.65rem;color:#6878a8;width:26px;text-align:right;}
+
+.hidden{display:none!important;}
+.nav-link{
+  color:#506088;font-size:0.8rem;letter-spacing:0.1em;
+  text-decoration:none;display:inline-flex;align-items:center;gap:4px;
+  transition:color 0.2s;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;
+}
+.nav-link:hover{color:#a8c0f0;}
+
+@media(max-width:380px){
+  .header h1{font-size:1.6rem;}
+  .zodiac-grid{grid-template-columns:repeat(3,1fr);gap:8px;}
+  .zodiac-symbol{font-size:1.3rem;}
+}
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+<audio id="bgm" src="Midnight_Constellations.mp3" loop></audio>
+<div class="bgm-ctrl">
+  <div class="bgm-volume-panel panel-hidden" id="volPanel">
+    <span class="vol-icon">🔉</span>
+    <input class="vol-slider" id="volSlider" type="range" min="0" max="100" value="35"
+      oninput="onVolChange(this)">
+    <span class="vol-pct" id="volPct">35%</span>
+  </div>
+  <button class="bgm-toggle" id="bgmToggle" onclick="toggleBGM()">🎵</button>
+</div>
+
+<div class="container">
+  <div style="width:100%;max-width:420px;">
+    <a href="../index.html" class="nav-link">← 占いトップへ</a>
+  </div>
+  <div class="header">
+    <h1>星座占い</h1>
+    <p>〜 星々があなたの一日を照らします 〜</p>
+  </div>
+
+  <!-- 星座選択 -->
+  <div id="selectSection">
+    <div class="zodiac-grid" id="zodiacGrid"></div>
+
+    <div class="birthday-section">
+      <button class="birthday-toggle" onclick="toggleBirthday()">▾ 自分の星座がわからない方はこちら</button>
+      <div class="birthday-form" id="birthdayForm">
+        <input type="date" class="birthday-input" id="birthdayInput">
+        <button class="divine-btn" style="max-width:200px;font-size:0.85rem;padding:10px;" onclick="divineFromBirthday()">星座を判定</button>
+      </div>
+    </div>
+
+    <button class="divine-btn" id="divineBtn" onclick="divine()" disabled>星座を選んで占う</button>
+  </div>
+
+  <!-- 結果 -->
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <div class="result-zodiac-symbol" id="rSymbol"></div>
+      <div class="result-zodiac-name" id="rName"></div>
+      <div class="result-zodiac-en" id="rNameEn"></div>
+      <div class="result-date" id="rDate"></div>
+    </div>
+    <div class="result-body">
+      <div id="fortuneCategories"></div>
+      <div class="lucky-section" id="luckySection"></div>
+
+      <div class="share-section">
+        <div class="share-label">今日の運勢をシェアする</div>
+        <div class="share-buttons">
+          <button class="share-btn share-btn-x" onclick="shareX()">𝕏 ポスト</button>
+          <button class="share-btn share-btn-line" onclick="shareLINE()">LINE</button>
+        </div>
+      </div>
+
+      <div class="cta-section">
+        <div class="cta-label">〜 Happirio の開運アイテム 〜</div>
+        <div class="cta-list">
+          <a class="cta-item cta-item-booth" href="https://happirio.booth.pm/" target="_blank" rel="noopener">
+            <div class="cta-icon">✦</div>
+            <div class="cta-body">
+              <div class="cta-title">開運待受画像を手に入れる</div>
+              <div class="cta-desc">あなたのラッキーカラーの待受 ／ BOOTH ¥300〜</div>
+            </div>
+          </a>
+          <a class="cta-item cta-item-note" href="https://note.com/happirio" target="_blank" rel="noopener">
+            <div class="cta-icon">✎</div>
+            <div class="cta-body">
+              <div class="cta-title">今月の開運ガイドを読む</div>
+              <div class="cta-desc">開運カラー解説＋待受画像セット ／ note ¥500〜</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <button class="retry-btn" id="retryBtn" onclick="resetAll()">また明日お越しください</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    毎日一度、星に導きを求めてください<br>
+    <span style="margin-top:4px;display:inline-block">
+      <a href="https://x.com/Happirio_" target="_blank">Happirio</a>
+    </span>
+  </div>
+</div>
+
+<script>
+// =========================================
+// BGM
+// =========================================
+let bgmStarted = false;
+let bgmMuted = false;
+let volPanelOpen = false;
+const bgmEl = document.getElementById('bgm');
+bgmEl.volume = 0.35;
+
+function startBGM() {
+  if (bgmStarted) return;
+  bgmStarted = true;
+  bgmEl.play().catch(() => {});
+}
+document.addEventListener('click', () => startBGM(), { once: true });
+document.addEventListener('touchstart', () => startBGM(), { once: true });
+
+function toggleBGM() {
+  if (!bgmStarted) startBGM();
+  volPanelOpen = !volPanelOpen;
+  const panel = document.getElementById('volPanel');
+  if (volPanelOpen) {
+    panel.classList.remove('panel-hidden');
+  } else {
+    panel.classList.add('panel-hidden');
+    bgmMuted = !bgmMuted;
+    bgmEl.muted = bgmMuted;
+    document.getElementById('bgmToggle').textContent = bgmMuted ? '\u{1F507}' : '\u{1F3B5}';
+  }
+}
+
+function onVolChange(slider) {
+  const val = parseInt(slider.value);
+  bgmEl.volume = val / 100;
+  bgmEl.muted = false;
+  bgmMuted = false;
+  document.getElementById('bgmToggle').textContent = val === 0 ? '\u{1F507}' : '\u{1F3B5}';
+  document.getElementById('volPct').textContent = val + '%';
+  slider.style.setProperty('--val', val + '%');
+}
+
+// =========================================
+// 12星座データ
+// =========================================
+const ZODIAC = [
+  { id:'aries',       symbol:'\u2648', name:'牡羊座',   en:'Aries',       period:'3/21 - 4/19',  startM:3,startD:21,endM:4,endD:19 },
+  { id:'taurus',      symbol:'\u2649', name:'牡牛座',   en:'Taurus',      period:'4/20 - 5/20',  startM:4,startD:20,endM:5,endD:20 },
+  { id:'gemini',      symbol:'\u264A', name:'双子座',   en:'Gemini',      period:'5/21 - 6/21',  startM:5,startD:21,endM:6,endD:21 },
+  { id:'cancer',      symbol:'\u264B', name:'蟹座',     en:'Cancer',      period:'6/22 - 7/22',  startM:6,startD:22,endM:7,endD:22 },
+  { id:'leo',         symbol:'\u264C', name:'獅子座',   en:'Leo',         period:'7/23 - 8/22',  startM:7,startD:23,endM:8,endD:22 },
+  { id:'virgo',       symbol:'\u264D', name:'乙女座',   en:'Virgo',       period:'8/23 - 9/22',  startM:8,startD:23,endM:9,endD:22 },
+  { id:'libra',       symbol:'\u264E', name:'天秤座',   en:'Libra',       period:'9/23 - 10/23', startM:9,startD:23,endM:10,endD:23 },
+  { id:'scorpio',     symbol:'\u264F', name:'蠍座',     en:'Scorpio',     period:'10/24 - 11/22',startM:10,startD:24,endM:11,endD:22 },
+  { id:'sagittarius', symbol:'\u2650', name:'射手座',   en:'Sagittarius', period:'11/23 - 12/21',startM:11,startD:23,endM:12,endD:21 },
+  { id:'capricorn',   symbol:'\u2651', name:'山羊座',   en:'Capricorn',   period:'12/22 - 1/19', startM:12,startD:22,endM:1,endD:19 },
+  { id:'aquarius',    symbol:'\u2652', name:'水瓶座',   en:'Aquarius',    period:'1/20 - 2/18',  startM:1,startD:20,endM:2,endD:18 },
+  { id:'pisces',      symbol:'\u2653', name:'魚座',     en:'Pisces',      period:'2/19 - 3/20',  startM:2,startD:19,endM:3,endD:20 },
+];
+
+// =========================================
+// 運勢テキストプール
+// =========================================
+const GENERAL_POOL = [
+  { stars:5, text:'最高の一日！あなたの行動すべてに星の加護があります。自信を持って新しいことに挑戦してみましょう。直感を信じて。' },
+  { stars:5, text:'天体の配置が最高の状態です。長い間温めていた計画を実行に移すのに絶好のタイミング。周囲の助けも得られます。' },
+  { stars:4, text:'穏やかで安定した運気。日常の中に小さな幸せを見つけられる一日です。感謝の気持ちを大切に過ごしましょう。' },
+  { stars:4, text:'良い流れが続いています。焦らず着実に進むことで、思った以上の成果が得られそう。人との縁も大切にして。' },
+  { stars:4, text:'エネルギーに満ちた一日。やるべきことに集中すれば、予想以上の結果が出ます。午後に嬉しい知らせがあるかも。' },
+  { stars:3, text:'まずまずの運気。大きな波はないものの、地道な努力が報われる日です。無理をせず自分のペースで進みましょう。' },
+  { stars:3, text:'平穏な一日。特別な出来事はなくても、それ自体が幸せなこと。身の回りの整理をすると運気が上向きます。' },
+  { stars:3, text:'星の巡りは中庸。新しい挑戦より、今あるものを丁寧に磨くことに集中すると良い結果につながります。' },
+  { stars:2, text:'やや慎重さが必要な一日。大きな決断は先送りにして、情報収集や準備に時間を使いましょう。焦りは禁物です。' },
+  { stars:2, text:'少し停滞感を感じるかもしれません。でもこれは充電期間。無理せず休息を取ることで、明日からの運気が好転します。' },
+  { stars:1, text:'試練の一日ですが、ここで踏ん張ることが将来の大きな飛躍につながります。自分を信じて、静かに過ごしましょう。' },
+];
+
+const LOVE_POOL = [
+  { stars:5, text:'恋愛運最高潮！運命的な出会いや、パートナーとの絆が一層深まる暗示。素直な気持ちを言葉にすることで幸運が訪れます。' },
+  { stars:4, text:'穏やかな愛情に包まれる一日。大切な人との時間を丁寧に過ごすことで関係がさらに良くなります。小さな思いやりが鍵。' },
+  { stars:4, text:'人間関係が活性化します。新しい出会いの場に足を運ぶと良い縁がありそう。笑顔を心がけて。' },
+  { stars:3, text:'恋愛面は平穏。焦って動くより、自分磨きの時間に充てると吉。内面の充実が良い縁を引き寄せます。' },
+  { stars:3, text:'コミュニケーションを大切にしたい日。相手の話にしっかり耳を傾けることで、誤解が解け関係が改善します。' },
+  { stars:2, text:'すれ違いが生じやすい日。感情的にならず、一拍おいてから言葉を選びましょう。冷静さが関係を守ります。' },
+  { stars:2, text:'恋愛面ではやや低調。無理に進展を求めず、自分の時間を楽しむことで心に余裕が生まれます。' },
+  { stars:1, text:'感情が揺れやすい日。衝動的な行動は控えて。今日は一人の時間を大切にすることで、心が落ち着きます。' },
+];
+
+const WORK_POOL = [
+  { stars:5, text:'仕事運は絶好調。新しいプロジェクトの立ち上げや重要なプレゼンに最適です。あなたの能力が最大限に発揮されます。' },
+  { stars:4, text:'コツコツとした努力が評価される日。上司や同僚からの信頼が高まり、重要な役割を任されるかもしれません。' },
+  { stars:4, text:'チームワークが鍵。周囲と協力することで、一人では成し遂げられない大きな成果が生まれそうです。' },
+  { stars:3, text:'仕事は順調ながらも、新しい挑戦には慎重に。今は足元を固める時期。確実にこなせることから片付けましょう。' },
+  { stars:3, text:'ルーティンワークが多い日ですが、そこに小さな工夫を加えると良い発見があります。マンネリ打破を意識して。' },
+  { stars:2, text:'集中力が途切れがちな日。優先順位をしっかり決めて、一つずつ確実に。マルチタスクは避けた方が無難です。' },
+  { stars:2, text:'対人面でやや摩擦が起きやすい暗示。メールやチャットの文面は送信前に見直して。丁寧さが救いになります。' },
+  { stars:1, text:'仕事面では忍耐の日。思うように進まなくても焦らないで。今の経験が将来の糧になると信じましょう。' },
+];
+
+const LUCKY_ITEMS = [
+  'ミントティー','赤い傘','手書きの手紙','木のスプーン','小さな花束',
+  'レモンキャンディ','お気に入りの本','白いハンカチ','銀色のペン','焼きたてパン',
+  '柑橘系の香水','革のブックカバー','手作りクッキー','古い写真','青い石',
+  'シナモンの香り','窓辺の植物','オルゴール','和紙のメモ帳','桜の箸置き',
+  'ラベンダーの香り','ガラスのコップ','星のモチーフ','金色のクリップ','月桂樹の葉',
+];
+
+const LUCKY_COLORS = [
+  '桜色','若葉色','藍色','珊瑚色','山吹色',
+  '藤色','翡翠色','茜色','月白','鴇色',
+  '萌黄','群青','紅梅色','浅葱色','胡桃色',
+  'ラピスラズリ','琥珀色','真珠色','深紫','黄金色',
+];
+
+const LUCKY_ACTIONS = [
+  '窓を開けて深呼吸してみよう',
+  '普段通らない道を歩いてみよう',
+  '久しぶりの人にメッセージを送ろう',
+  '今日は少しだけ早起きしてみよう',
+  'お気に入りの音楽を聴きながら散歩しよう',
+  '手書きで日記を書いてみよう',
+  '空を見上げて雲の形を探してみよう',
+  '好きな飲み物をゆっくり味わおう',
+  '部屋の小さな模様替えをしてみよう',
+  '今日の夕焼けを写真に撮ってみよう',
+  '感謝の気持ちを言葉にして伝えよう',
+  '新しいレシピに挑戦してみよう',
+  '一駅分だけ歩いてみよう',
+  'お花を一輪買って帰ろう',
+  '寝る前にストレッチをしてみよう',
+  '星空を5分だけ眺めてみよう',
+  '好きな香りのキャンドルを灯そう',
+  '美術館や博物館のサイトを覗いてみよう',
+];
+
+// =========================================
+// シードランダム
+// =========================================
+function seededRand(seed) {
+  let x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+function todaySeed() {
+  const d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate();
+}
+function pickPool(pool, zodiacIdx, offset) {
+  const seed = todaySeed() * 13 + zodiacIdx * 7 + offset;
+  const idx = Math.floor(seededRand(seed) * pool.length);
+  return pool[idx];
+}
+function pickArray(arr, zodiacIdx, offset) {
+  const seed = todaySeed() * 17 + zodiacIdx * 11 + offset;
+  const idx = Math.floor(seededRand(seed) * arr.length);
+  return arr[idx];
+}
+
+// =========================================
+// 生年月日から星座判定
+// =========================================
+function getZodiacFromDate(month, day) {
+  for (let i = 0; i < ZODIAC.length; i++) {
+    const z = ZODIAC[i];
+    if (z.startM <= z.endM) {
+      if ((month === z.startM && day >= z.startD) || (month === z.endM && day <= z.endD) ||
+          (month > z.startM && month < z.endM)) return i;
+    } else {
+      if ((month === z.startM && day >= z.startD) || (month === z.endM && day <= z.endD) ||
+          month > z.startM || month < z.endM) return i;
+    }
+  }
+  return 0;
+}
+
+// =========================================
+// Web Audio SE
+// =========================================
+let actx = null;
+function ac() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  return actx;
+}
+function playSelectSE() {
+  const ctx = ac(), t = ctx.currentTime;
+  const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = 600;
+  o.frequency.linearRampToValueAtTime(480, t + 0.1);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+  o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + 0.16);
+}
+function playRevealSE() {
+  const ctx = ac(), t = ctx.currentTime;
+  [523, 659, 784].forEach((f, i) => {
+    const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t + i * 0.08);
+    g.gain.linearRampToValueAtTime(0.12, t + i * 0.08 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.08 + 1.0);
+    o.connect(g).connect(ctx.destination);
+    o.start(t + i * 0.08); o.stop(t + i * 0.08 + 1.1);
+  });
+  // キラキラ音
+  const dur = 0.3;
+  const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1);
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  const bpf = ctx.createBiquadFilter(); bpf.type = 'bandpass';
+  bpf.frequency.setValueAtTime(4000, t); bpf.frequency.linearRampToValueAtTime(8000, t + 0.15);
+  bpf.Q.value = 2;
+  const g2 = ctx.createGain();
+  g2.gain.setValueAtTime(0, t); g2.gain.linearRampToValueAtTime(0.06, t + 0.03);
+  g2.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  src.connect(bpf).connect(g2).connect(ctx.destination);
+  src.start(t); src.stop(t + dur);
+}
+
+// =========================================
+// UI
+// =========================================
+let selectedZodiac = -1;
+let currentResult = null;
+
+// 星座グリッド生成
+const grid = document.getElementById('zodiacGrid');
+ZODIAC.forEach((z, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'zodiac-btn';
+  btn.innerHTML = `<div class="zodiac-symbol">${z.symbol}</div><div class="zodiac-name">${z.name}</div><div class="zodiac-date">${z.period}</div>`;
+  btn.onclick = () => selectZodiac(i);
+  grid.appendChild(btn);
+});
+
+function selectZodiac(idx) {
+  if (checkAlreadyDone()) return;
+  selectedZodiac = idx;
+  playSelectSE();
+  document.querySelectorAll('.zodiac-btn').forEach((b, i) => {
+    b.classList.toggle('selected', i === idx);
+  });
+  const btn = document.getElementById('divineBtn');
+  btn.disabled = false;
+  btn.textContent = `${ZODIAC[idx].name}を占う`;
+}
+
+function toggleBirthday() {
+  const form = document.getElementById('birthdayForm');
+  form.classList.toggle('show');
+}
+
+function divineFromBirthday() {
+  const input = document.getElementById('birthdayInput');
+  if (!input.value) return;
+  const parts = input.value.split('-');
+  const month = parseInt(parts[1]);
+  const day = parseInt(parts[2]);
+  const idx = getZodiacFromDate(month, day);
+  selectZodiac(idx);
+  document.getElementById('birthdayForm').classList.remove('show');
+  divine();
+}
+
+function divine() {
+  if (selectedZodiac < 0 || checkAlreadyDone()) return;
+  saveResult(selectedZodiac);
+  showResult(selectedZodiac, true);
+}
+
+function showResult(zodiacIdx, isNew) {
+  const z = ZODIAC[zodiacIdx];
+  const general = pickPool(GENERAL_POOL, zodiacIdx, 1);
+  const love = pickPool(LOVE_POOL, zodiacIdx, 2);
+  const work = pickPool(WORK_POOL, zodiacIdx, 3);
+  const luckyItem = pickArray(LUCKY_ITEMS, zodiacIdx, 4);
+  const luckyColor = pickArray(LUCKY_COLORS, zodiacIdx, 5);
+  const luckyAction = pickArray(LUCKY_ACTIONS, zodiacIdx, 6);
+
+  currentResult = { zodiac: z, general, love, work, luckyItem, luckyColor, luckyAction };
+
+  // ヘッダー
+  document.getElementById('rSymbol').textContent = z.symbol;
+  document.getElementById('rName').textContent = z.name;
+  document.getElementById('rNameEn').textContent = z.en;
+  const today = new Date();
+  document.getElementById('rDate').textContent =
+    `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日の運勢`;
+
+  // 運勢カテゴリ
+  const catEl = document.getElementById('fortuneCategories');
+  catEl.innerHTML = buildCategory('総 合 運', 'general', general) +
+                    buildCategory('恋 愛 運', 'love', love) +
+                    buildCategory('仕 事 運', 'work', work);
+
+  // ラッキーセクション
+  document.getElementById('luckySection').innerHTML = `
+    <div class="lucky-card"><div class="lucky-label">LUCKY ITEM</div><div class="lucky-value">${luckyItem}</div></div>
+    <div class="lucky-card"><div class="lucky-label">LUCKY COLOR</div><div class="lucky-value">${luckyColor}</div></div>
+    <div class="lucky-card wide"><div class="lucky-label">TODAY'S ACTION</div><div class="lucky-value">${luckyAction}</div></div>`;
+
+  // 表示
+  document.getElementById('selectSection').classList.add('hidden');
+  const card = document.getElementById('resultCard');
+  card.classList.add('show');
+
+  // 1日1回
+  const retryBtn = document.getElementById('retryBtn');
+  retryBtn.textContent = 'また明日お越しください';
+  retryBtn.disabled = true;
+  retryBtn.style.opacity = '0.5';
+  retryBtn.style.cursor = 'default';
+
+  if (isNew) {
+    playRevealSE();
+    setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  }
+}
+
+function buildCategory(label, cls, data) {
+  const starsHtml = Array.from({length:5}, (_, i) =>
+    `<span class="${i < data.stars ? 'star-on' : 'star-off'}">\u2605</span>`
+  ).join('');
+  return `<div class="fortune-category">
+    <div class="fortune-cat-header">
+      <span class="fortune-cat-label ${cls}">${label}</span>
+      <span class="fortune-stars">${starsHtml}</span>
+    </div>
+    <div class="fortune-cat-text">${data.text}</div>
+  </div>`;
+}
+
+// =========================================
+// localStorage (1日1回制限)
+// =========================================
+function getTodayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function checkAlreadyDone() {
+  try {
+    const data = localStorage.getItem('happirio_horoscope');
+    if (!data) return false;
+    return JSON.parse(data).date === getTodayStr();
+  } catch(e) { return false; }
+}
+function getStoredZodiac() {
+  try {
+    const data = localStorage.getItem('happirio_horoscope');
+    if (!data) return -1;
+    return JSON.parse(data).zodiacIdx;
+  } catch(e) { return -1; }
+}
+function saveResult(zodiacIdx) {
+  localStorage.setItem('happirio_horoscope', JSON.stringify({ date: getTodayStr(), zodiacIdx }));
+}
+
+// =========================================
+// SNSシェア
+// =========================================
+function shareX() {
+  if (!currentResult) return;
+  const r = currentResult;
+  const stars = '\u2605'.repeat(r.general.stars) + '\u2606'.repeat(5 - r.general.stars);
+  const text = `${r.zodiac.symbol} ${r.zodiac.name}の今日の運勢 ${stars}\nLucky item: ${r.luckyItem}\nLucky color: ${r.luckyColor}\n\n${r.luckyAction}\n\n#星座占い #Happirio`;
+  window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.href)}`, '_blank');
+}
+function shareLINE() {
+  if (!currentResult) return;
+  const r = currentResult;
+  const text = `${r.zodiac.symbol} ${r.zodiac.name}の今日の運勢\nLucky item: ${r.luckyItem}\nLucky color: ${r.luckyColor}\n${r.luckyAction}`;
+  window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(text)}`, '_blank');
+}
+
+function resetAll() {
+  if (checkAlreadyDone()) return;
+}
+
+// =========================================
+// 初期化
+// =========================================
+document.addEventListener('DOMContentLoaded', () => {
+  if (checkAlreadyDone()) {
+    const idx = getStoredZodiac();
+    if (idx >= 0) {
+      selectedZodiac = idx;
+      document.getElementById('divineBtn').disabled = true;
+      showResult(idx, false);
+    }
+  }
+});
+
+// =========================================
+// 星空 Canvas
+// =========================================
+(function() {
+  const canvas = document.getElementById('starCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, dpr, stars = [], shooters = [];
+  let lastShooter = 0, nextDelay = 5000 + Math.random() * 6000;
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    genStars();
+  }
+  function genStars() {
+    stars = [];
+    const count = Math.min(Math.floor(W * H / 5000), 180);
+    for (let i = 0; i < count; i++) {
+      const r = Math.random();
+      const size = r < 0.05 ? 1.8 + Math.random() * 0.9
+                 : r < 0.25 ? 0.9 + Math.random() * 0.7
+                 :             0.3 + Math.random() * 0.5;
+      const cr = Math.random();
+      const color = cr < 0.15 ? {h:220,s:60} : cr < 0.25 ? {h:200,s:40} : null;
+      stars.push({
+        x: Math.random()*W, y: Math.random()*H, size,
+        baseAlpha: 0.35+Math.random()*0.65, speed: 0.25+Math.random()*1.1,
+        phase: Math.random()*Math.PI*2, color
+      });
+    }
+  }
+  function spawnShooter() {
+    const angle = (28+Math.random()*28)*Math.PI/180;
+    const speed = 5+Math.random()*5;
+    const len = 90+Math.random()*130;
+    shooters.push({
+      x: W*(0.15+Math.random()*0.7), y: H*Math.random()*0.45,
+      vx: -Math.cos(angle)*speed, vy: Math.sin(angle)*speed,
+      len, life:1.0, decay: 0.012+Math.random()*0.012
+    });
+  }
+  function draw(ts) {
+    ctx.clearRect(0,0,W,H);
+    const bg = ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#050518'); bg.addColorStop(0.5,'#08081e'); bg.addColorStop(1,'#0a0a24');
+    ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+    const t = ts * 0.001;
+    for (const s of stars) {
+      const tw = 0.3+0.7*(0.5+0.5*Math.sin(t*s.speed+s.phase));
+      const a = s.baseAlpha*tw;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.size,0,Math.PI*2);
+      ctx.fillStyle = s.color ? `hsla(${s.color.h},${s.color.s}%,92%,${a})` : `rgba(255,255,255,${a})`;
+      if (s.size>1.4) { ctx.shadowBlur=s.size*4; ctx.shadowColor=s.color?`hsl(${s.color.h},70%,85%)`:'rgba(180,200,255,0.8)'; }
+      else { ctx.shadowBlur=0; }
+      ctx.fill();
+    }
+    ctx.shadowBlur=0;
+    if (ts-lastShooter>nextDelay) {
+      lastShooter=ts; nextDelay=4500+Math.random()*7500;
+      spawnShooter();
+      if (Math.random()<0.18) setTimeout(spawnShooter,350+Math.random()*400);
+    }
+    for (let i=shooters.length-1;i>=0;i--) {
+      const sh=shooters[i]; sh.x+=sh.vx; sh.y+=sh.vy; sh.life-=sh.decay;
+      if (sh.life<=0||sh.x<-80||sh.y>H+80) { shooters.splice(i,1); continue; }
+      const nx=sh.vx/Math.hypot(sh.vx,sh.vy), ny=sh.vy/Math.hypot(sh.vx,sh.vy);
+      const tl=sh.len*sh.life, tx=sh.x-nx*tl, ty=sh.y-ny*tl;
+      const grad=ctx.createLinearGradient(tx,ty,sh.x,sh.y);
+      grad.addColorStop(0,'rgba(180,200,255,0)');
+      grad.addColorStop(0.5,`rgba(200,220,255,${sh.life*0.3})`);
+      grad.addColorStop(1,`rgba(255,255,255,${sh.life*0.95})`);
+      ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(sh.x,sh.y);
+      ctx.strokeStyle=grad; ctx.lineWidth=1.8*sh.life; ctx.lineCap='round'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(sh.x,sh.y,2.2*sh.life,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${sh.life})`;
+      ctx.shadowBlur=10*sh.life; ctx.shadowColor='rgba(160,180,255,0.9)'; ctx.fill(); ctx.shadowBlur=0;
+    }
+    requestAnimationFrame(draw);
+  }
+  resize();
+  window.addEventListener('resize',resize);
+  window.addEventListener('orientationchange',()=>setTimeout(resize,100));
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タロット占い</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body {
+  font-family: 'Hiragino Mincho ProN','Yu Mincho',serif;
+  background: #0d0d1a;
+  min-height: 100vh;
+  color: #e8dfc8;
+  overflow-x: hidden;
+}
+#starCanvas {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; width: 100%; height: 100%;
+}
+.page {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 32px 16px 48px;
+  gap: 24px;
+}
+.header { text-align: center; }
+.header h1 {
+  font-size: 2rem; letter-spacing: 0.4em;
+  color: #c8a8e8;
+  text-shadow: 0 0 24px rgba(180,120,240,0.6);
+}
+.header p { font-size: 0.8rem; color: #8878a8; letter-spacing: 0.15em; margin-top: 6px; }
+
+/* モード選択 */
+.mode-select { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 360px; }
+.mode-btn {
+  background: linear-gradient(135deg, #1e1430, #2a1d4a);
+  border: 1px solid #5a3a8a; border-radius: 12px;
+  padding: 18px 20px; cursor: pointer; color: #e8dfc8;
+  font-family: inherit; text-align: left; transition: all 0.2s;
+  display: flex; align-items: center; gap: 14px;
+}
+.mode-btn:hover { border-color: #c8a8e8; box-shadow: 0 0 16px rgba(180,120,240,0.25); transform: translateY(-2px); }
+.mode-icon { font-size: 2rem; width: 44px; text-align: center; }
+.mode-info h3 { font-size: 1rem; letter-spacing: 0.1em; color: #c8a8e8; }
+.mode-info p { font-size: 0.75rem; color: #9888b8; margin-top: 3px; line-height: 1.5; }
+
+/* 共通 */
+.section { width: 100%; max-width: 400px; }
+.back-btn {
+  background: none; border: none; color: #8878a8; font-family: inherit;
+  font-size: 0.8rem; letter-spacing: 0.1em; cursor: pointer; padding: 4px 0;
+  display: flex; align-items: center; gap: 6px;
+}
+.back-btn:hover { color: #c8a8e8; }
+.question-label { font-size: 0.75rem; color: #9888b8; letter-spacing: 0.15em; margin-bottom: 6px; }
+.question-input {
+  width: 100%; background: #1a1230; border: 1px solid #3a2a5a; border-radius: 8px;
+  color: #e8dfc8; font-family: inherit; font-size: 0.9rem; padding: 10px 14px;
+  outline: none; transition: border-color 0.2s;
+}
+.question-input:focus { border-color: #8858c8; }
+.question-input::placeholder { color: #5a4a7a; }
+.ab-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.ab-label { font-size: 0.75rem; color: #9888b8; letter-spacing: 0.1em; margin-bottom: 4px; }
+.ab-tag {
+  display: inline-block; width: 22px; height: 22px; border-radius: 50%;
+  text-align: center; line-height: 22px; font-size: 0.75rem; font-weight: bold; margin-right: 4px;
+}
+.ab-tag.a { background: #3a1060; color: #c8a8e8; }
+.ab-tag.b { background: #0a2860; color: #a8c8e8; }
+.draw-btn {
+  width: 100%; background: linear-gradient(135deg, #5a1a9a, #8830c8, #5a1a9a);
+  border: none; border-radius: 30px; padding: 14px;
+  color: #f0e8ff; font-family: inherit; font-size: 1rem; letter-spacing: 0.25em;
+  cursor: pointer; margin-top: 20px;
+  box-shadow: 0 4px 20px rgba(136,48,200,0.4); transition: all 0.2s;
+}
+.draw-btn:hover { box-shadow: 0 6px 28px rgba(180,100,255,0.5); transform: translateY(-2px); }
+.draw-btn:active { transform: translateY(1px); }
+.draw-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ========== シャッフルアニメーション ========== */
+.shuffle-area {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+  width: 100%; max-width: 400px; padding: 10px 0;
+}
+.shuffle-scene {
+  position: relative; width: 200px; height: 170px;
+  display: flex; align-items: center; justify-content: center;
+}
+/* 左右の山 */
+.s-pile {
+  position: absolute; width: 90px; height: 150px;
+  display: flex; align-items: center; justify-content: center;
+}
+.s-pile-left  { left: 10px; animation: pileLeft  var(--sdur, 0.55s) ease-in-out var(--sdel,0s) var(--srep,3) both; }
+.s-pile-right { right: 10px; animation: pileRight var(--sdur, 0.55s) ease-in-out var(--sdel,0s) var(--srep,3) both; }
+@keyframes pileLeft {
+  0%   { transform: translateX(0) rotate(0deg); }
+  35%  { transform: translateX(44px) rotate(4deg); }
+  65%  { transform: translateX(44px) rotate(4deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+@keyframes pileRight {
+  0%   { transform: translateX(0) rotate(0deg); }
+  35%  { transform: translateX(-44px) rotate(-4deg); }
+  65%  { transform: translateX(-44px) rotate(-4deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+/* カード1枚ずつが少しずつズレて積まれる見た目 */
+.s-card {
+  position: absolute;
+  width: 84px; height: 140px;
+  background: linear-gradient(160deg, #1e1040, #0d0820);
+  border: 1.5px solid #4a2a8a;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; color: #5a3a8a;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.6);
+}
+.s-pile-left  .s-card:nth-child(1) { transform: translate( 2px,-4px) rotate( 2deg); }
+.s-pile-left  .s-card:nth-child(2) { transform: translate(-1px,-2px) rotate(-1deg); }
+.s-pile-left  .s-card:nth-child(3) { transform: translate( 1px, 0px) rotate( 1deg); }
+.s-pile-right .s-card:nth-child(1) { transform: translate(-2px,-4px) rotate(-2deg); }
+.s-pile-right .s-card:nth-child(2) { transform: translate( 1px,-2px) rotate( 1deg); }
+.s-pile-right .s-card:nth-child(3) { transform: translate(-1px, 0px) rotate(-1deg); }
+
+.shuffle-text {
+  font-size: 0.8rem; letter-spacing: 0.25em; color: #8868a8;
+  animation: textPulse 0.8s ease-in-out infinite alternate;
+}
+@keyframes textPulse { from { opacity:0.4; } to { opacity:1; } }
+
+/* ========== ファン（1枚引き用）========== */
+.fan-wrapper {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  width: 100%; max-width: 400px;
+}
+.fan-hint {
+  font-size: 0.8rem; color: #a890c8; letter-spacing: 0.18em; text-align: center;
+  animation: textPulse 1.2s ease-in-out infinite alternate;
+}
+.fan-container {
+  position: relative; width: 100%; height: 230px;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.fan-card {
+  position: absolute;
+  left: 50%; bottom: 10px;
+  width: 92px; height: 152px;
+  margin-left: -46px;
+  transform-origin: bottom center;
+  cursor: pointer;
+  background: linear-gradient(160deg, #1e1040, #0d0820);
+  border: 1.5px solid #4a2a8a;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; color: #5a3a8a;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.7);
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease, filter 0.2s;
+  /* 内側パターン */
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(100,50,180,0.07) 10px, rgba(100,50,180,0.07) 20px),
+    repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(80,30,150,0.07) 10px, rgba(80,30,150,0.07) 20px),
+    linear-gradient(160deg, #1e1040, #0d0820);
+}
+.fan-card:hover:not(.faded) { filter: brightness(1.5); }
+.fan-card.faded { opacity: 0; pointer-events: none; transform: var(--fan-rot) scale(0.8) !important; }
+.fan-card.chosen {
+  transform: translateY(-50px) scale(1.08) rotate(0deg) !important;
+  border-color: #a878e8;
+  box-shadow: 0 12px 40px rgba(140,80,220,0.5);
+  cursor: default;
+}
+/* ファン展開アニメ */
+@keyframes fanIn {
+  from { opacity:0; transform: var(--fan-base) scale(0.6); }
+  to   { opacity:1; transform: var(--fan-rot); }
+}
+.fan-card { animation: fanIn 0.5s cubic-bezier(0.34,1.2,0.64,1) both; }
+
+/* ========== カードエリア（結果）========== */
+.cards-area {
+  width: 100%; max-width: 400px;
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+}
+.cards-row { display: flex; justify-content: center; gap: 16px; width: 100%; }
+.card-wrapper { perspective: 900px; }
+.card {
+  width: 130px; height: 220px;
+  position: relative; cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+.card.flipped { transform: rotateY(180deg); }
+.card.reversed .card-front { transform: rotateY(180deg) rotate(180deg); }
+.card-face {
+  position: absolute; inset: 0; border-radius: 12px;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden;
+}
+.card-back {
+  background: linear-gradient(160deg, #1e1040, #0d0820);
+  border: 2px solid #4a2a8a;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+}
+.card-back-pattern {
+  width: 90%; height: 90%; border-radius: 8px;
+  border: 1px solid #3a1a6a;
+  background:
+    repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(100,50,180,0.08) 8px, rgba(100,50,180,0.08) 16px),
+    repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(80,30,150,0.08) 8px, rgba(80,30,150,0.08) 16px);
+  display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
+}
+.card-front {
+  transform: rotateY(180deg);
+  border: 2px solid #7a4ab8;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 16px rgba(140,80,220,0.2);
+  display: flex; flex-direction: column;
+}
+.card-front-inner {
+  flex: 1; display: flex; flex-direction: column;
+  background: linear-gradient(170deg, #1a0d30, #110820);
+  padding: 8px 8px 6px;
+}
+.card-num { font-size: 0.55rem; color: #7a5a9a; letter-spacing: 0.2em; text-align: center; margin-bottom: 4px; }
+.card-art {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 2.8rem;
+  border: 1px solid #2e1a4e; border-radius: 6px;
+  background: radial-gradient(ellipse at 50% 40%, #221040, #0d0820);
+}
+.card-name-jp { font-size: 0.65rem; color: #c8a8e8; letter-spacing: 0.15em; text-align: center; margin-top: 6px; line-height: 1.4; }
+.card-name-en { font-size: 0.5rem; color: #6a4a8a; text-align: center; margin-top: 2px; letter-spacing: 0.1em; }
+.card-orient-badge { padding: 3px 0; text-align: center; font-size: 0.55rem; letter-spacing: 0.1em; border-top: 1px solid #2e1a4e; }
+.card-orient-badge.upright { background: #1a0a30; color: #b898d8; }
+.card-orient-badge.reversed { background: #200a10; color: #c8709a; }
+
+/* AB ラベル */
+.ab-card-label { font-size: 0.7rem; letter-spacing: 0.2em; text-align: center; color: #9888b8; margin-bottom: 6px; }
+.ab-card-col { display: flex; flex-direction: column; align-items: center; }
+
+/* AB deal アニメ */
+@keyframes dealFromCenter {
+  from { opacity:0; transform: scale(0.5) translateY(30px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+.deal-anim { animation: dealFromCenter 0.5s cubic-bezier(0.34,1.2,0.64,1) both; }
+
+/* 結果テキスト */
+.result-block {
+  background: linear-gradient(170deg, #1a1030, #120a24);
+  border: 1px solid #3a2a5a; border-radius: 12px;
+  padding: 18px 20px; width: 100%;
+}
+.result-block h3 { font-size: 0.7rem; letter-spacing: 0.25em; color: #8858c8; margin-bottom: 10px; text-align: center; }
+.result-card-name { font-size: 1.1rem; color: #c8a8e8; text-align: center; letter-spacing: 0.1em; margin-bottom: 4px; }
+.result-orient { font-size: 0.7rem; text-align: center; margin-bottom: 14px; letter-spacing: 0.1em; }
+.result-orient.upright { color: #b898d8; }
+.result-orient.reversed { color: #d87090; }
+.result-meaning-label { font-size: 0.65rem; color: #7858a8; letter-spacing: 0.15em; margin-bottom: 4px; }
+.result-meaning { font-size: 0.82rem; color: #d8ccee; line-height: 1.8; margin-bottom: 12px; }
+.result-keyword-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.keyword-tag {
+  background: #2a1448; border: 1px solid #5a3a8a; border-radius: 20px;
+  padding: 3px 10px; font-size: 0.65rem; color: #b898d8; letter-spacing: 0.08em;
+}
+
+/* AB判定バナー */
+.verdict-banner {
+  background: linear-gradient(135deg, #2a1060, #180830);
+  border: 1px solid #8858c8; border-radius: 12px;
+  padding: 18px 20px; width: 100%; text-align: center;
+}
+.verdict-banner .verdict-label { font-size: 0.7rem; color: #9878c8; letter-spacing: 0.2em; }
+.verdict-banner .verdict-choice {
+  font-size: 1.7rem; color: #e8c8ff; letter-spacing: 0.1em; margin: 8px 0 6px;
+  text-shadow: 0 0 20px rgba(200,150,255,0.6);
+  line-height: 1.3;
+}
+.verdict-banner .verdict-push {
+  font-size: 0.88rem; color: #c8b0e8; line-height: 1.8; margin-bottom: 10px;
+}
+.verdict-banner .verdict-card-note {
+  font-size: 0.72rem; color: #7858a8; line-height: 1.6;
+  border-top: 1px solid #3a2060; padding-top: 10px; margin-top: 4px;
+}
+
+.retry-btn {
+  width: 100%; max-width: 400px;
+  background: none; border: 1px solid #5a3a7a; border-radius: 8px;
+  color: #8878a8; font-family: inherit; font-size: 0.85rem;
+  letter-spacing: 0.2em; padding: 11px; cursor: pointer; transition: all 0.2s;
+}
+.retry-btn:hover { border-color: #c8a8e8; color: #c8a8e8; }
+
+.hidden { display: none !important; }
+
+.ab-result-row { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+.ab-result-item { background: #16102a; border: 1px solid #3a2a5a; border-radius: 10px; padding: 14px 16px; }
+.ab-result-item h4 { font-size: 0.75rem; letter-spacing: 0.15em; margin-bottom: 8px; }
+.ab-result-item.item-a h4 { color: #c8a8e8; }
+.ab-result-item.item-b h4 { color: #a8c8e8; }
+
+/* BGMコントロール */
+.bgm-ctrl {
+  position: fixed; bottom: 16px; right: 16px; z-index: 100;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+}
+.bgm-toggle {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(30,16,64,0.9); border: 1px solid #5a3a8a;
+  cursor: pointer; font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  backdrop-filter: blur(4px);
+}
+.bgm-toggle:hover { border-color: #c8a8e8; box-shadow: 0 0 12px rgba(180,120,240,0.3); }
+.bgm-volume-panel {
+  background: rgba(20,10,48,0.92); border: 1px solid #5a3a8a;
+  border-radius: 20px; padding: 8px 14px;
+  display: flex; align-items: center; gap: 8px;
+  backdrop-filter: blur(6px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.bgm-volume-panel.hidden {
+  opacity: 0; pointer-events: none;
+  transform: translateY(6px) scale(0.95);
+  display: flex !important; /* hidden クラスの !important を上書き */
+}
+.vol-icon { font-size: 0.85rem; }
+.vol-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 90px; height: 3px;
+  background: linear-gradient(to right, #8830c8 var(--val,35%), #3a2a5a var(--val,35%));
+  border-radius: 2px; outline: none; cursor: pointer;
+}
+.vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px;
+  border-radius: 50%; background: #c8a8e8;
+  box-shadow: 0 0 6px rgba(180,120,240,0.5);
+  cursor: pointer;
+}
+.vol-pct { font-size: 0.65rem; color: #9878b8; width: 26px; text-align: right; }
+
+.hidden{display:none!important;}
+
+/* ナビゲーション */
+.nav-top-link{
+  color:#8878a8;font-size:0.8rem;letter-spacing:0.1em;
+  text-decoration:none;display:inline-flex;align-items:center;gap:4px;
+  transition:color 0.2s;font-family:inherit;
+}
+.nav-top-link:hover{color:#c8a8e8;}
+
+/* シェアボタン */
+.share-section{text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid #2a2a5a;}
+.share-sct-label{font-size:0.7rem;color:#6a5a8a;letter-spacing:0.15em;margin-bottom:10px;}
+.share-btns{display:flex;justify-content:center;gap:12px;}
+.shr-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px 20px;border-radius:20px;font-size:0.75rem;
+  font-family:inherit;letter-spacing:0.1em;cursor:pointer;
+  transition:all 0.2s;text-decoration:none;border:none;
+}
+.shr-btn-x{background:#1a1a1a;color:#fff;}
+.shr-btn-x:hover{background:#333;}
+.shr-btn-line{background:#06C755;color:#fff;}
+.shr-btn-line:hover{background:#05b04c;}
+
+/* CTA */
+.cta-section{margin-top:16px;padding-top:16px;border-top:1px solid #2a2a5a;}
+.cta-lbl{font-size:0.7rem;color:#6a5a8a;letter-spacing:0.15em;margin-bottom:12px;text-align:center;}
+.cta-list{display:flex;flex-direction:column;gap:8px;}
+.cta-link{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:8px;
+  cursor:pointer;transition:all 0.2s;text-decoration:none;color:inherit;
+}
+.cta-link:hover{transform:translateX(4px);}
+.cta-ico{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.9rem;}
+.cta-bdy{flex:1;min-width:0;}
+.cta-ttl{font-size:0.82rem;font-weight:bold;line-height:1.3;}
+.cta-dsc{font-size:0.68rem;margin-top:2px;opacity:0.6;}
+.cta-booth{background:rgba(26,16,64,0.3);border:1px solid rgba(90,30,160,0.3);}
+.cta-booth .cta-ico{background:rgba(90,30,160,0.25);color:#c8a8e8;}
+.cta-booth .cta-ttl{color:#c8a8e8;}
+.cta-note{background:rgba(40,20,80,0.3);border:1px solid rgba(120,60,200,0.3);}
+.cta-note .cta-ico{background:rgba(120,60,200,0.25);color:#a888e0;}
+.cta-note .cta-ttl{color:#a888e0;}
+
+/* フッター */
+.tarot-footer{font-size:0.7rem;color:#3a2a5a;letter-spacing:0.1em;text-align:center;margin-top:16px;padding-bottom:4px;}
+.tarot-footer a{color:#5a4a7a;text-decoration:none;}
+.tarot-footer a:hover{text-decoration:underline;}
+
+/* ========== スマホ対応 ========== */
+@media (max-width: 380px) {
+  .header h1 { font-size: 1.6rem; }
+  .card { width: 110px; height: 188px; }
+  .card-art { font-size: 2.2rem; }
+  .cards-row { gap: 10px; }
+  .fan-card { width: 76px; height: 128px; }
+  .fan-container { height: 200px; }
+  .draw-btn { font-size: 0.9rem; padding: 12px; }
+  .mode-btn { padding: 14px 16px; }
+  .mode-icon { font-size: 1.6rem; width: 36px; }
+}
+@media (hover: none) {
+  /* タッチデバイスではhoverを無効化してチラつき防止 */
+  .fan-card:hover:not(.faded) { filter: none; }
+  .mode-btn:hover { transform: none; }
+  .draw-btn:hover { transform: none; }
+}
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+<audio id="bgm" src="月影のアルカナ.mp3" loop></audio>
+<div class="bgm-ctrl">
+  <div class="bgm-volume-panel hidden" id="volPanel">
+    <span class="vol-icon">🔉</span>
+    <input class="vol-slider" id="volSlider" type="range" min="0" max="100" value="35"
+      oninput="onVolChange(this)">
+    <span class="vol-pct" id="volPct">35%</span>
+  </div>
+  <button class="bgm-toggle" id="bgmToggle" onclick="toggleBGM()">🎵</button>
+</div>
+
+<!-- ========== モード選択 ========== -->
+<div class="page" id="pageMode">
+  <div class="section">
+    <a href="../index.html" class="nav-top-link">← 占いトップへ</a>
+  </div>
+  <div class="header">
+    <h1>タロット占い</h1>
+    <p>〜 星々があなたの道を照らします 〜</p>
+  </div>
+  <div class="mode-select">
+    <button class="mode-btn" onclick="gotoSingle()">
+      <div class="mode-icon">🌙</div>
+      <div class="mode-info">
+        <h3>一枚引き</h3>
+        <p>今日の運勢・悩みへのヒントを<br>一枚のカードが告げます</p>
+      </div>
+    </button>
+    <button class="mode-btn" onclick="gotoAB()">
+      <div class="mode-icon">⚖️</div>
+      <div class="mode-info">
+        <h3>二者択一</h3>
+        <p>AとBどちらにすべきか、<br>タロットが背中を押します</p>
+      </div>
+    </button>
+  </div>
+  <div class="tarot-footer">
+    <a href="https://x.com/Happirio_" target="_blank" rel="noopener">Happirio</a>
+  </div>
+</div>
+
+<!-- ========== 一枚引き ========== -->
+<div class="page hidden" id="pageSingle">
+  <div class="section">
+    <a href="../index.html" class="nav-top-link">← 占いトップへ</a>
+  </div>
+  <div class="header">
+    <h1>一枚引き</h1>
+    <p>〜 今この瞬間のメッセージ 〜</p>
+  </div>
+  <div class="section">
+    <button class="back-btn" onclick="goHome()">← モード選択へ</button>
+  </div>
+
+  <!-- フォーム -->
+  <div class="section" id="singleForm">
+    <div class="question-label">— 占いたいこと（任意）</div>
+    <input class="question-input" id="singleQ" placeholder="例：今月の仕事運は？" maxlength="60">
+    <button class="draw-btn" onclick="startSingleShuffle()">カードを引く</button>
+  </div>
+
+  <!-- シャッフル演出 -->
+  <div class="shuffle-area hidden" id="singleShuffle">
+    <div class="shuffle-scene">
+      <div class="s-pile s-pile-left"  style="--sdur:0.55s;--sdel:0s;--srep:3">
+        <div class="s-card">✦</div><div class="s-card"></div><div class="s-card"></div>
+      </div>
+      <div class="s-pile s-pile-right" style="--sdur:0.55s;--sdel:0s;--srep:3">
+        <div class="s-card">✦</div><div class="s-card"></div><div class="s-card"></div>
+      </div>
+    </div>
+    <p class="shuffle-text">カードをシャッフルしています…</p>
+  </div>
+
+  <!-- ファン選択 -->
+  <div class="fan-wrapper hidden" id="singleFan">
+    <p class="fan-hint">✦ カードを1枚選んでください ✦</p>
+    <div class="fan-container" id="fanContainer"></div>
+  </div>
+
+  <!-- 選んだカード＋結果 -->
+  <div class="cards-area hidden" id="singleResult">
+    <div class="card-wrapper">
+      <div class="card" id="singleCard" onclick="flipSingle()">
+        <div class="card-face card-back"><div class="card-back-pattern">✦</div></div>
+        <div class="card-face card-front" id="singleFront"></div>
+      </div>
+    </div>
+    <p style="font-size:0.75rem;color:#6a5a8a;letter-spacing:0.1em;" id="singleTapHint">カードをタップして開く</p>
+    <div class="result-block hidden" id="singleMeaning"></div>
+    <div class="share-section hidden" id="singleShare">
+      <div class="share-sct-label">結果をシェアする</div>
+      <div class="share-btns">
+        <button class="shr-btn shr-btn-x" onclick="shareXSingle()">𝕏 ポスト</button>
+        <button class="shr-btn shr-btn-line" onclick="shareLINESingle()">LINE</button>
+      </div>
+    </div>
+    <div class="cta-section hidden" id="singleCTA">
+      <div class="cta-lbl">〜 Happirio の開運アイテム 〜</div>
+      <div class="cta-list">
+        <a class="cta-link cta-booth" href="https://happirio.booth.pm/" target="_blank" rel="noopener">
+          <div class="cta-ico">✦</div>
+          <div class="cta-bdy">
+            <div class="cta-ttl">開運待受画像を手に入れる</div>
+            <div class="cta-dsc">BOOTH ¥300〜</div>
+          </div>
+        </a>
+        <a class="cta-link cta-note" href="https://note.com/happirio" target="_blank" rel="noopener">
+          <div class="cta-ico">✎</div>
+          <div class="cta-bdy">
+            <div class="cta-ttl">今月の開運ガイドを読む</div>
+            <div class="cta-dsc">note ¥500〜</div>
+          </div>
+        </a>
+      </div>
+    </div>
+    <button class="retry-btn hidden" id="singleRetryBtn" onclick="resetSingle()">もう一度引く</button>
+    <div class="tarot-footer">
+      <a href="https://x.com/Happirio_" target="_blank" rel="noopener">Happirio</a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 二者択一 ========== -->
+<div class="page hidden" id="pageAB">
+  <div class="section">
+    <a href="../index.html" class="nav-top-link">← 占いトップへ</a>
+  </div>
+  <div class="header">
+    <h1>二者択一</h1>
+    <p>〜 運命の天秤があなたを導きます 〜</p>
+  </div>
+  <div class="section">
+    <button class="back-btn" onclick="goHome()">← モード選択へ</button>
+  </div>
+
+  <!-- フォーム -->
+  <div class="section" id="abForm">
+    <div class="question-label">— 選択の状況（任意）</div>
+    <input class="question-input" id="abQ" placeholder="例：転職か現職継続か迷っています" maxlength="60">
+    <div class="ab-inputs">
+      <div>
+        <div class="ab-label"><span class="ab-tag a">A</span>選択肢</div>
+        <input class="question-input" id="abA" placeholder="例：転職する" maxlength="30">
+      </div>
+      <div>
+        <div class="ab-label"><span class="ab-tag b">B</span>選択肢</div>
+        <input class="question-input" id="abB" placeholder="例：現職を続ける" maxlength="30">
+      </div>
+    </div>
+    <button class="draw-btn" onclick="startABShuffle()">カードを引く</button>
+  </div>
+
+  <!-- シャッフル演出 -->
+  <div class="shuffle-area hidden" id="abShuffle">
+    <div class="shuffle-scene">
+      <div class="s-pile s-pile-left"  style="--sdur:0.55s;--sdel:0s;--srep:3">
+        <div class="s-card">✦</div><div class="s-card"></div><div class="s-card"></div>
+      </div>
+      <div class="s-pile s-pile-right" style="--sdur:0.55s;--sdel:0s;--srep:3">
+        <div class="s-card">✦</div><div class="s-card"></div><div class="s-card"></div>
+      </div>
+    </div>
+    <p class="shuffle-text">カードをシャッフルしています…</p>
+  </div>
+
+  <!-- カード＋結果 -->
+  <div class="cards-area hidden" id="abResult">
+    <div class="cards-row">
+      <div class="ab-card-col">
+        <div class="ab-card-label" id="labelA">A</div>
+        <div class="card-wrapper">
+          <div class="card" id="cardA" onclick="flipAB('A')">
+            <div class="card-face card-back"><div class="card-back-pattern">✦</div></div>
+            <div class="card-face card-front" id="frontA"></div>
+          </div>
+        </div>
+      </div>
+      <div class="ab-card-col">
+        <div class="ab-card-label" id="labelB">B</div>
+        <div class="card-wrapper">
+          <div class="card" id="cardB" onclick="flipAB('B')">
+            <div class="card-face card-back"><div class="card-back-pattern">✦</div></div>
+            <div class="card-face card-front" id="frontB"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:0.75rem;color:#6a5a8a;letter-spacing:0.1em;" id="abTapHint">カードをタップして開く（両方開くと結果が出ます）</p>
+    <div class="ab-result-row hidden" id="abMeanings"></div>
+    <div class="verdict-banner hidden" id="abVerdict"></div>
+    <div class="share-section hidden" id="abShare">
+      <div class="share-sct-label">結果をシェアする</div>
+      <div class="share-btns">
+        <button class="shr-btn shr-btn-x" onclick="shareXAB()">𝕏 ポスト</button>
+        <button class="shr-btn shr-btn-line" onclick="shareLINEAB()">LINE</button>
+      </div>
+    </div>
+    <div class="cta-section hidden" id="abCTA">
+      <div class="cta-lbl">〜 Happirio の開運アイテム 〜</div>
+      <div class="cta-list">
+        <a class="cta-link cta-booth" href="https://happirio.booth.pm/" target="_blank" rel="noopener">
+          <div class="cta-ico">✦</div>
+          <div class="cta-bdy">
+            <div class="cta-ttl">開運待受画像を手に入れる</div>
+            <div class="cta-dsc">BOOTH ¥300〜</div>
+          </div>
+        </a>
+        <a class="cta-link cta-note" href="https://note.com/happirio" target="_blank" rel="noopener">
+          <div class="cta-ico">✎</div>
+          <div class="cta-bdy">
+            <div class="cta-ttl">今月の開運ガイドを読む</div>
+            <div class="cta-dsc">note ¥500〜</div>
+          </div>
+        </a>
+      </div>
+    </div>
+    <button class="retry-btn hidden" id="abRetryBtn" onclick="resetAB()">もう一度引く</button>
+    <div class="tarot-footer">
+      <a href="https://x.com/Happirio_" target="_blank" rel="noopener">Happirio</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// =========================================
+// タロット大アルカナ 22枚
+// =========================================
+const TAROT = [
+  { num:'0',    nameJp:'愚者',       nameEn:'The Fool',          art:'🌟',
+    upright:{ meaning:'新たな始まり、無限の可能性、自由な精神、冒険への第一歩。恐れずに飛び込む勇気があなたを導きます。', keywords:['新出発','自由','純粋','可能性','冒険'] },
+    reversed:{ meaning:'向こう見ずな行動、計画不足、無責任。今一度立ち止まって、リスクを見直す必要があります。', keywords:['軽率','無計画','逃避','混乱'] } },
+  { num:'I',    nameJp:'魔術師',     nameEn:'The Magician',      art:'🪄',
+    upright:{ meaning:'意志力、創造力、自己実現。あなたには必要な才能と道具が揃っています。行動に移す時です。', keywords:['創造','意志力','スキル','実行力','集中'] },
+    reversed:{ meaning:'欺瞞、才能の浪費、自信過剰。力を持ちながら正しい方向に使えていない状態です。', keywords:['詐欺','浪費','不誠実','過信'] } },
+  { num:'II',   nameJp:'女教皇',     nameEn:'The High Priestess',art:'🌕',
+    upright:{ meaning:'直感、潜在意識、神秘的な知恵。内なる声に耳を傾けてください。答えはすでにあなたの中にあります。', keywords:['直感','神秘','内省','知恵','沈黙'] },
+    reversed:{ meaning:'隠された真実、直感の無視、秘密。表面だけを見ず、深層に潜む事実を探る必要があります。', keywords:['隠蔽','混乱','直感無視','秘密'] } },
+  { num:'III',  nameJp:'女帝',       nameEn:'The Empress',       art:'🌺',
+    upright:{ meaning:'豊かさ、母性、繁栄、創造力の開花。愛情と自然の恵みに満ちた時期。物事が育ち実を結びます。', keywords:['豊穣','母性','創造','繁栄','愛情'] },
+    reversed:{ meaning:'停滞、依存、過保護。エネルギーが内向きになりすぎています。自立を心がけましょう。', keywords:['停滞','依存','過保護','不毛'] } },
+  { num:'IV',   nameJp:'皇帝',       nameEn:'The Emperor',       art:'👑',
+    upright:{ meaning:'権威、安定、秩序、リーダーシップ。強固な意志で状況をコントロールできます。計画的な行動が実を結びます。', keywords:['権威','安定','秩序','リーダー','構造'] },
+    reversed:{ meaning:'支配欲、融通のなさ、独裁。力の乱用や頑固さが障害になっています。柔軟性を持ちましょう。', keywords:['支配','硬直','独裁','暴力'] } },
+  { num:'V',    nameJp:'法王',       nameEn:'The Hierophant',    art:'⛪',
+    upright:{ meaning:'伝統、精神的な導き、信仰、制度。既存の知恵や慣習に従うことで道が開けます。師や助言者を大切に。', keywords:['伝統','信仰','教え','制度','調和'] },
+    reversed:{ meaning:'旧習への反発、非正統、束縛からの解放。従来のやり方を疑い、自分だけの道を切り開く時かもしれません。', keywords:['反逆','自由','束縛','異端'] } },
+  { num:'VI',   nameJp:'恋人',       nameEn:'The Lovers',        art:'💞',
+    upright:{ meaning:'愛、調和、選択、パートナーシップ。心から望む道を選んでください。誠実な関係が幸運をもたらします。', keywords:['愛','調和','選択','絆','誠実'] },
+    reversed:{ meaning:'不調和、誤った選択、価値観の衝突。感情に流されず、本当に大切なものを見極めてください。', keywords:['不和','誤選択','葛藤','不誠実'] } },
+  { num:'VII',  nameJp:'戦車',       nameEn:'The Chariot',       art:'🏆',
+    upright:{ meaning:'勝利、意志の力、前進、克服。困難を乗り越え目標へと突き進む力があります。強い意志が勝利をもたらします。', keywords:['勝利','前進','意志','克服','突破'] },
+    reversed:{ meaning:'方向性の喪失、自制心の欠如、停滞。力を持ちながらも制御できていません。目標を再設定しましょう。', keywords:['迷走','暴走','停滞','喪失'] } },
+  { num:'VIII', nameJp:'力',         nameEn:'Strength',          art:'🦁',
+    upright:{ meaning:'内なる力、勇気、忍耐、慈悲。優しさと強さで困難を乗り越えられます。自分を信じてください。', keywords:['勇気','忍耐','慈悲','内なる力','自信'] },
+    reversed:{ meaning:'自信喪失、弱さ、臆病。恐れに支配されています。本来持つ力を思い出してください。', keywords:['臆病','自己不信','弱さ','不安'] } },
+  { num:'IX',   nameJp:'隠者',       nameEn:'The Hermit',        art:'🕯️',
+    upright:{ meaning:'内省、孤独の中の知恵、道を示す光。一人で深く考える時間が、真実の答えをもたらします。', keywords:['内省','知恵','孤独','導き','探求'] },
+    reversed:{ meaning:'孤立、閉じこもり、内向きすぎ。孤独に閉じこもりすぎています。世界との繋がりを大切に。', keywords:['孤立','閉鎖','回避','内向'] } },
+  { num:'X',    nameJp:'運命の輪',   nameEn:'Wheel of Fortune',  art:'☸️',
+    upright:{ meaning:'運命の転換、好機の到来、サイクルの変化。運の波が来ています。タイミングを逃さず行動を。', keywords:['転機','好機','サイクル','運命','変化'] },
+    reversed:{ meaning:'不運、抵抗、悪循環。流れに逆らっています。変化を受け入れる心の準備が必要です。', keywords:['不運','抵抗','停滞','悪循環'] } },
+  { num:'XI',   nameJp:'正義',       nameEn:'Justice',           art:'⚖️',
+    upright:{ meaning:'公正、真実、バランス、因果応報。正直に行動すれば公平な結果が訪れます。誠実さが鍵です。', keywords:['公正','真実','均衡','誠実','法'] },
+    reversed:{ meaning:'不公正、偏見、責任回避。真実から目を背けています。自分の行いを正直に振り返りましょう。', keywords:['不公正','偏見','逃避','不誠実'] } },
+  { num:'XII',  nameJp:'吊るされた男',nameEn:'The Hanged Man',   art:'🙃',
+    upright:{ meaning:'視点の転換、犠牲、忍耐、啓示。今は動かずに待つ時。違う角度から見ることで答えが見えます。', keywords:['転換','忍耐','犠牲','啓示','停止'] },
+    reversed:{ meaning:'無駄な犠牲、ぐずぐずと引き延ばし。必要のない我慢を続けています。解放のときが来ています。', keywords:['無駄','引き延ばし','執着','停滞'] } },
+  { num:'XIII', nameJp:'死神',       nameEn:'Death',             art:'🌑',
+    upright:{ meaning:'終わりと始まり、変容、解放、再生。古いものを手放す時。恐れることはありません—変化が新たな扉を開きます。', keywords:['変容','終焉','解放','再生','転換'] },
+    reversed:{ meaning:'変化への抵抗、停滞、執着。手放せないものが前進を妨げています。変化を恐れないでください。', keywords:['抵抗','停滞','執着','回避'] } },
+  { num:'XIV',  nameJp:'節制',       nameEn:'Temperance',        art:'🏺',
+    upright:{ meaning:'バランス、調和、忍耐、癒し。焦らず少しずつ。中庸を保つことで物事がうまく流れていきます。', keywords:['調和','バランス','忍耐','節度','癒し'] },
+    reversed:{ meaning:'過剰、アンバランス、急ぎすぎ。極端な行動が状況を悪化させています。落ち着いてペースを整えて。', keywords:['過剰','不均衡','焦り','極端'] } },
+  { num:'XV',   nameJp:'悪魔',       nameEn:'The Devil',         art:'🔗',
+    upright:{ meaning:'束縛、執着、誘惑、物質主義。何かに縛られていませんか？鎖を断ち切る力はあなたの中にあります。', keywords:['束縛','執着','誘惑','依存','欲望'] },
+    reversed:{ meaning:'解放、束縛からの脱出、自由への目覚め。縛りから解き放たれるエネルギーが高まっています。', keywords:['解放','自由','覚醒','脱却'] } },
+  { num:'XVI',  nameJp:'塔',         nameEn:'The Tower',         art:'⚡',
+    upright:{ meaning:'突然の変化、崩壊、覚醒、解放。避けられない衝撃が訪れるかもしれませんが、それは古い構造を壊し新しい道を開きます。', keywords:['崩壊','激変','覚醒','解放','試練'] },
+    reversed:{ meaning:'変化への抵抗、崩壊の回避、内なる動揺。表面は穏やかでも内部で何かが崩れかけています。', keywords:['抵抗','回避','不安','内乱'] } },
+  { num:'XVII', nameJp:'星',         nameEn:'The Star',          art:'⭐',
+    upright:{ meaning:'希望、インスピレーション、癒し、再生。暗い夜の後に星が輝くように、希望の光があなたを照らしています。', keywords:['希望','癒し','インスピレーション','平和','再生'] },
+    reversed:{ meaning:'絶望、信念の喪失、失望。希望を失いかけていますが、星はまだ輝いています。内なる光を信じて。', keywords:['絶望','失望','不信','閉塞'] } },
+  { num:'XVIII',nameJp:'月',         nameEn:'The Moon',          art:'🌙',
+    upright:{ meaning:'幻想、不安、潜在意識、夢。物事がはっきりしない時期。直感を信じながらも慎重に進んでください。', keywords:['幻想','直感','不安','神秘','潜在意識'] },
+    reversed:{ meaning:'混乱の解消、真実の顕現、恐れの克服。霧が晴れ、真実が姿を現し始めています。', keywords:['明晰','解放','真実','覚醒'] } },
+  { num:'XIX',  nameJp:'太陽',       nameEn:'The Sun',           art:'☀️',
+    upright:{ meaning:'喜び、成功、活力、明るい未来。最高の運気！あらゆることがうまくいく輝かしい時期です。自信を持って。', keywords:['成功','喜び','活力','明るさ','幸福'] },
+    reversed:{ meaning:'一時的な曇り、過度の楽観、輝きの陰り。良い流れではありますが、過信は禁物。地に足をつけて。', keywords:['過信','一時的','陰り','浪費'] } },
+  { num:'XX',   nameJp:'審判',       nameEn:'Judgement',         art:'📯',
+    upright:{ meaning:'覚醒、再生、赦し、大きな決断。過去を手放し、新たな自分として蘇る時。重要な判断を下すことが求められています。', keywords:['覚醒','再生','赦し','決断','召命'] },
+    reversed:{ meaning:'自己批判、後悔への執着、決断の先延ばし。過去に縛られています。自分を赦し前へ進みましょう。', keywords:['後悔','自責','先延ばし','執着'] } },
+  { num:'XXI',  nameJp:'世界',       nameEn:'The World',         art:'🌍',
+    upright:{ meaning:'完成、達成、統合、旅の終わり。一つのサイクルが完成に向かっています。努力が報われ、すべてがひとつになります。', keywords:['完成','達成','統合','成就','円環'] },
+    reversed:{ meaning:'未完成、遅延、終わりの先延ばし。もう少しで完成なのに何かが邪魔をしています。最後まで諦めないで。', keywords:['未完','遅延','停滞','不完全'] } },
+];
+
+// =========================================
+// BGM
+// =========================================
+let bgmStarted = false;
+let bgmMuted = false;
+let volPanelOpen = false;
+const bgmEl = document.getElementById('bgm');
+bgmEl.volume = 0.35;
+
+function startBGM() {
+  if (bgmStarted) return;
+  bgmStarted = true;
+  bgmEl.play().catch(() => {});
+}
+document.addEventListener('click',      () => startBGM(), { once: true });
+document.addEventListener('touchstart', () => startBGM(), { once: true });
+
+function toggleBGM() {
+  if (!bgmStarted) startBGM();
+  volPanelOpen = !volPanelOpen;
+  const panel = document.getElementById('volPanel');
+  if (volPanelOpen) {
+    panel.classList.remove('hidden');
+  } else {
+    panel.classList.add('hidden');
+    // パネルを閉じるときにミュートトグル
+    bgmMuted = !bgmMuted;
+    bgmEl.muted = bgmMuted;
+    document.getElementById('bgmToggle').textContent = bgmMuted ? '🔇' : '🎵';
+  }
+}
+
+function onVolChange(slider) {
+  const val = parseInt(slider.value);
+  bgmEl.volume = val / 100;
+  bgmEl.muted = false;
+  bgmMuted = false;
+  document.getElementById('bgmToggle').textContent = val === 0 ? '🔇' : '🎵';
+  document.getElementById('volPct').textContent = val + '%';
+  // スライダーのグラデーション更新
+  slider.style.setProperty('--val', val + '%');
+}
+
+// =========================================
+// Web Audio SE
+// =========================================
+let actx = null;
+function ac() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  return actx;
+}
+function playShuffleSE() {
+  const ctx = ac();
+  for (let i = 0; i < 6; i++) {
+    const t = ctx.currentTime + i * 0.28;
+    const dur = 0.18;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let j = 0; j < d.length; j++) d[j] = (Math.random()*2-1) * (1-j/d.length);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const bpf = ctx.createBiquadFilter(); bpf.type='bandpass'; bpf.frequency.value=1600; bpf.Q.value=0.8;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.22, t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, t+dur);
+    src.connect(bpf).connect(g).connect(ctx.destination);
+    src.start(t); src.stop(t+dur);
+  }
+}
+function playPickSE() {
+  // カード選択時：軽い「ぽん」
+  const ctx = ac(), t = ctx.currentTime;
+  const o = ctx.createOscillator(); o.type='sine'; o.frequency.value=520;
+  o.frequency.linearRampToValueAtTime(400, t+0.12);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.001, t+0.25);
+  o.connect(g).connect(ctx.destination);
+  o.start(t); o.stop(t+0.26);
+}
+function playFlipSE() {
+  const ctx = ac(), t = ctx.currentTime;
+  const dur = 0.3;
+  const buf = ctx.createBuffer(1, ctx.sampleRate*dur, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i=0;i<d.length;i++) d[i]=(Math.random()*2-1);
+  const src = ctx.createBufferSource(); src.buffer=buf;
+  const bpf = ctx.createBiquadFilter(); bpf.type='bandpass';
+  bpf.frequency.setValueAtTime(600, t);
+  bpf.frequency.linearRampToValueAtTime(3000, t+0.12);
+  bpf.frequency.linearRampToValueAtTime(800, t+dur);
+  bpf.Q.value=0.7;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.14, t+0.04);
+  g.gain.exponentialRampToValueAtTime(0.001, t+dur);
+  src.connect(bpf).connect(g).connect(ctx.destination);
+  src.start(t); src.stop(t+dur);
+  const bell = ctx.createOscillator();
+  bell.type='sine'; bell.frequency.value=1047;
+  const bg = ctx.createGain();
+  bg.gain.setValueAtTime(0, t+0.1); bg.gain.linearRampToValueAtTime(0.18, t+0.12);
+  bg.gain.exponentialRampToValueAtTime(0.001, t+1.1);
+  bell.connect(bg).connect(ctx.destination);
+  bell.start(t+0.1); bell.stop(t+1.2);
+}
+function playRevealSE(isSun) {
+  const ctx = ac(), t = ctx.currentTime;
+  if (isSun) {
+    [523,659,784,1047].forEach((f,i)=>{
+      const o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=f;
+      const g=ctx.createGain(); const st=t+i*0.1;
+      g.gain.setValueAtTime(0,st); g.gain.linearRampToValueAtTime(0.18,st+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001,st+0.6);
+      o.connect(g).connect(ctx.destination); o.start(st); o.stop(st+0.7);
+    });
+  } else {
+    [392,494,587].forEach((f,i)=>{
+      const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=f;
+      const g=ctx.createGain();
+      g.gain.setValueAtTime(0,t+i*0.06); g.gain.linearRampToValueAtTime(0.1,t+i*0.06+0.04);
+      g.gain.exponentialRampToValueAtTime(0.001,t+i*0.06+1.2);
+      o.connect(g).connect(ctx.destination); o.start(t+i*0.06); o.stop(t+i*0.06+1.3);
+    });
+  }
+}
+
+// =========================================
+// ユーティリティ
+// =========================================
+function pickCard(exclude=[]) {
+  const pool = TAROT.filter(c=>!exclude.includes(c.num));
+  const card  = pool[Math.floor(Math.random()*pool.length)];
+  const reversed = Math.random() < 0.35;
+  return { card, reversed };
+}
+function buildCardFront(card, reversed) {
+  return `
+    <div class="card-front-inner" style="${reversed?'transform:rotate(180deg)':''}">
+      <div class="card-num">${card.num}</div>
+      <div class="card-art">${card.art}</div>
+      <div class="card-name-jp">${card.nameJp}</div>
+      <div class="card-name-en">${card.nameEn}</div>
+    </div>
+    <div class="card-orient-badge ${reversed?'reversed':'upright'}">${reversed?'▽ 逆位置':'△ 正位置'}</div>`;
+}
+function buildMeaning(card, reversed, label) {
+  const data = reversed ? card.reversed : card.upright;
+  return `
+    <h3>— ${label||'カードの意味'} —</h3>
+    <div class="result-card-name">${card.nameJp}（${card.nameEn}）</div>
+    <div class="result-orient ${reversed?'reversed':'upright'}">${reversed?'▽ 逆位置':'△ 正位置'}</div>
+    <div class="result-meaning-label">▸ メッセージ</div>
+    <div class="result-meaning">${data.meaning}</div>
+    <div class="result-meaning-label">▸ キーワード</div>
+    <div class="result-keyword-row">${data.keywords.map(k=>`<span class="keyword-tag">${k}</span>`).join('')}</div>`;
+}
+
+// =========================================
+// 画面切替
+// =========================================
+function showPage(id) {
+  ['pageMode','pageSingle','pageAB'].forEach(p=>document.getElementById(p).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo({top:0});
+}
+function goHome()     { showPage('pageMode');  }
+function gotoSingle() {
+  showPage('pageSingle');
+  const stored = getStoredSingle();
+  if (stored) { restoreSingle(stored); }
+}
+function gotoAB() {
+  showPage('pageAB');
+  const stored = getStoredAB();
+  if (stored) { restoreAB(stored); }
+}
+
+// =========================================
+// シャッフル演出（共通）
+// =========================================
+function runShuffle(shuffleId, durationMs, callback) {
+  document.getElementById(shuffleId).classList.remove('hidden');
+  playShuffleSE();
+  setTimeout(callback, durationMs);
+}
+
+// =========================================
+// 一枚引き
+// =========================================
+let singlePicked = null;
+// ファンに並べるカードのインデックス（どれを選ぶかのため全部決めておく）
+const FAN_COUNT = 5;
+const FAN_ROTATIONS = [-28, -14, 0, 14, 28]; // 度
+
+function startSingleShuffle() {
+  if (checkDoneSingle()) { restoreSingle(getStoredSingle()); return; }
+  document.getElementById('singleForm').classList.add('hidden');
+  runShuffle('singleShuffle', 1700, showFan);
+}
+
+function showFan() {
+  document.getElementById('singleShuffle').classList.add('hidden');
+  document.getElementById('singleFan').classList.remove('hidden');
+
+  const container = document.getElementById('fanContainer');
+  container.innerHTML = '';
+
+  for (let i = 0; i < FAN_COUNT; i++) {
+    const rot = FAN_ROTATIONS[i];
+    const card = document.createElement('div');
+    card.className = 'fan-card';
+    card.innerHTML = '✦';
+    card.style.setProperty('--fan-rot',  `rotate(${rot}deg)`);
+    card.style.setProperty('--fan-base', `rotate(0deg) scale(0.6)`);
+    card.style.animationDelay = `${i * 0.07}s`;
+    card.style.transform = `rotate(${rot}deg)`;
+    card.dataset.index = i;
+    card.addEventListener('click', () => selectFromFan(i, card));
+    container.appendChild(card);
+  }
+}
+
+function selectFromFan(idx, chosenEl) {
+  if (chosenEl.classList.contains('chosen')) return;
+  playPickSE();
+
+  // 全カードにfaded, 選んだものにchosen
+  document.querySelectorAll('.fan-card').forEach((c, i) => {
+    if (i === idx) {
+      c.classList.add('chosen');
+    } else {
+      c.classList.add('faded');
+    }
+  });
+
+  // 少し待ってからカード表示フェーズへ
+  setTimeout(() => {
+    singlePicked = pickCard();
+    document.getElementById('singleFront').innerHTML = buildCardFront(singlePicked.card, singlePicked.reversed);
+    const cardEl = document.getElementById('singleCard');
+    singlePicked.reversed ? cardEl.classList.add('reversed') : cardEl.classList.remove('reversed');
+
+    document.getElementById('singleFan').classList.add('hidden');
+    document.getElementById('singleResult').classList.remove('hidden');
+  }, 700);
+}
+
+function flipSingle() {
+  if (!singlePicked) return;
+  const cardEl = document.getElementById('singleCard');
+  if (cardEl.classList.contains('flipped')) return;
+  cardEl.classList.add('flipped');
+  playFlipSE();
+  setTimeout(() => {
+    const meaning = document.getElementById('singleMeaning');
+    meaning.innerHTML = buildMeaning(singlePicked.card, singlePicked.reversed);
+    meaning.classList.remove('hidden');
+    document.getElementById('singleTapHint').classList.add('hidden');
+    document.getElementById('singleShare').classList.remove('hidden');
+    document.getElementById('singleCTA').classList.remove('hidden');
+    const retryBtn = document.getElementById('singleRetryBtn');
+    retryBtn.classList.remove('hidden');
+    retryBtn.textContent = 'また明日お越しください';
+    retryBtn.disabled = true; retryBtn.style.opacity = '0.5'; retryBtn.style.cursor = 'default';
+    saveSingleResult(singlePicked.card.num, singlePicked.reversed);
+    playRevealSE(singlePicked.card.num === 'XIX');
+    setTimeout(() => meaning.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
+  }, 700);
+}
+
+function resetSingle() {
+  if (checkDoneSingle()) return;
+  singlePicked = null;
+  document.getElementById('singleCard').classList.remove('flipped','reversed');
+  document.getElementById('singleResult').classList.add('hidden');
+  document.getElementById('singleMeaning').classList.add('hidden');
+  document.getElementById('singleShare').classList.add('hidden');
+  document.getElementById('singleCTA').classList.add('hidden');
+  document.getElementById('singleRetryBtn').classList.add('hidden');
+  document.getElementById('singleTapHint').classList.remove('hidden');
+  document.getElementById('singleFan').classList.add('hidden');
+  document.getElementById('singleForm').classList.remove('hidden');
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+// =========================================
+// 二者択一
+// =========================================
+let abPickedA = null, abPickedB = null;
+let abFlippedA = false, abFlippedB = false;
+
+function startABShuffle() {
+  if (checkDoneAB()) { restoreAB(getStoredAB()); return; }
+  const labelA = document.getElementById('abA').value.trim() || 'A';
+  const labelB = document.getElementById('abB').value.trim() || 'B';
+  document.getElementById('labelA').textContent = labelA;
+  document.getElementById('labelB').textContent = labelB;
+  document.getElementById('abForm').classList.add('hidden');
+  runShuffle('abShuffle', 1700, dealABCards);
+}
+
+function dealABCards() {
+  document.getElementById('abShuffle').classList.add('hidden');
+
+  abPickedA = pickCard();
+  abPickedB = pickCard([abPickedA.card.num]);
+  abFlippedA = false; abFlippedB = false;
+
+  ['cardA','cardB'].forEach(id => {
+    const c = document.getElementById(id);
+    c.classList.remove('flipped','reversed');
+  });
+  document.getElementById('frontA').innerHTML = buildCardFront(abPickedA.card, abPickedA.reversed);
+  document.getElementById('frontB').innerHTML = buildCardFront(abPickedB.card, abPickedB.reversed);
+  if (abPickedA.reversed) document.getElementById('cardA').classList.add('reversed');
+  if (abPickedB.reversed) document.getElementById('cardB').classList.add('reversed');
+
+  document.getElementById('abResult').classList.remove('hidden');
+  document.getElementById('abMeanings').classList.add('hidden');
+  document.getElementById('abVerdict').classList.add('hidden');
+  document.getElementById('abRetryBtn').classList.add('hidden');
+  document.getElementById('abTapHint').classList.remove('hidden');
+
+  // deal アニメーション（完了後にクラスを外してフリップを有効化）
+  const cA = document.getElementById('cardA');
+  const cB = document.getElementById('cardB');
+  cA.classList.add('deal-anim');
+  cB.style.animationDelay = '0.2s';
+  cB.classList.add('deal-anim');
+  setTimeout(() => {
+    cA.classList.remove('deal-anim');
+    cB.classList.remove('deal-anim');
+    cB.style.animationDelay = '';
+  }, 800);
+
+  playShuffleSE();
+}
+
+function flipAB(which) {
+  if (which==='A' && !abFlippedA) {
+    document.getElementById('cardA').classList.add('flipped');
+    abFlippedA = true; playFlipSE();
+  } else if (which==='B' && !abFlippedB) {
+    document.getElementById('cardB').classList.add('flipped');
+    abFlippedB = true; playFlipSE();
+  }
+  if (abFlippedA && abFlippedB) setTimeout(showABResult, 700);
+}
+
+// スコア計算（正位置カードのポジティブ度）
+function calcScore(picked) {
+  const positiveNums = ['0','I','III','VI','VII','VIII','X','XI','XIV','XVII','XIX','XX','XXI'];
+  const base = positiveNums.includes(picked.card.num) ? 2 : 1;
+  const orientBonus = picked.reversed ? -1 : 1;
+  return base * orientBonus + Math.random() * 0.4; // 微小ランダムで同点回避
+}
+
+// 背中を押す文句テンプレート
+const PUSH_TEMPLATES = [
+  (w, kws) => `迷いを手放して、${w}の道へ踏み出してみましょう。「${kws[0]}」と「${kws[1]}」のエネルギーがあなたを後押ししています。きっと大丈夫です。`,
+  (w, kws) => `カードははっきりと${w}を指し示しています。「${kws[0]}」の力があなたの中にあります。勇気を持って一歩を踏み出してください。`,
+  (w, kws) => `${w}を選ぶことで、「${kws[0]}」と「${kws[1]}」があなたのそばに宿ります。星があなたの選択を祝福しています。`,
+  (w, kws) => `タロットは${w}への道に光を見ています。「${kws[0]}」のエネルギーを信じて、心の声に従ってみてください。`,
+];
+
+function showABResult() {
+  const labelA = document.getElementById('labelA').textContent;
+  const labelB = document.getElementById('labelB').textContent;
+  const sA = calcScore(abPickedA);
+  const sB = calcScore(abPickedB);
+
+  const meanings = document.getElementById('abMeanings');
+  meanings.innerHTML = `
+    <div class="ab-result-item item-a">
+      <h4><span class="ab-tag a">A</span>${labelA} — ${abPickedA.card.nameJp}（${abPickedA.reversed?'逆位置':'正位置'}）</h4>
+      <div class="result-meaning-label">▸ このカードが示すこと</div>
+      <div class="result-meaning" style="font-size:0.78rem;">${(abPickedA.reversed?abPickedA.card.reversed:abPickedA.card.upright).meaning}</div>
+    </div>
+    <div class="ab-result-item item-b">
+      <h4><span class="ab-tag b">B</span>${labelB} — ${abPickedB.card.nameJp}（${abPickedB.reversed?'逆位置':'正位置'}）</h4>
+      <div class="result-meaning-label">▸ このカードが示すこと</div>
+      <div class="result-meaning" style="font-size:0.78rem;">${(abPickedB.reversed?abPickedB.card.reversed:abPickedB.card.upright).meaning}</div>
+    </div>`;
+  meanings.classList.remove('hidden');
+
+  // 常に勝者を決める（micランダムで同点は起きにくいが保険でA優先）
+  const winner   = sA >= sB ? labelA : labelB;
+  const winPick  = sA >= sB ? abPickedA : abPickedB;
+  const winData  = winPick.reversed ? winPick.card.reversed : winPick.card.upright;
+  const losePick = sA >= sB ? abPickedB : abPickedA;
+  const loseData = losePick.reversed ? losePick.card.reversed : losePick.card.upright;
+
+  const tmpl = PUSH_TEMPLATES[Math.floor(Math.random()*PUSH_TEMPLATES.length)];
+  const pushMsg = tmpl(winner, winData.keywords);
+
+  const verdict = document.getElementById('abVerdict');
+  verdict.innerHTML = `
+    <div class="verdict-label">— タロットの導き —</div>
+    <div class="verdict-choice">「 ${winner} 」を選びましょう</div>
+    <div class="verdict-push">${pushMsg}</div>
+    <div class="verdict-card-note">
+      ✦ ${winner}のカード「${winPick.card.nameJp}」は${winPick.reversed?'逆位置':'正位置'}で出ました。<br>
+      もう一方の「${winPick===abPickedA?labelB:labelA}」のカード「${losePick.card.nameJp}」は、今は力を蓄える時と告げています。
+    </div>`;
+  verdict.classList.remove('hidden');
+  document.getElementById('abTapHint').classList.add('hidden');
+
+  document.getElementById('abShare').classList.remove('hidden');
+  document.getElementById('abCTA').classList.remove('hidden');
+  const abBtn = document.getElementById('abRetryBtn');
+  abBtn.classList.remove('hidden');
+  abBtn.textContent = 'また明日お越しください';
+  abBtn.disabled = true; abBtn.style.opacity = '0.5'; abBtn.style.cursor = 'default';
+  _abWinner = winner;
+  saveABResult(abPickedA.card.num, abPickedA.reversed, abPickedB.card.num, abPickedB.reversed, labelA, labelB, winner);
+
+  playRevealSE(false);
+  setTimeout(() => verdict.scrollIntoView({ behavior:'smooth', block:'nearest' }), 100);
+}
+
+function resetAB() {
+  if (checkDoneAB()) return;
+  abPickedA=null; abPickedB=null; abFlippedA=false; abFlippedB=false;
+  ['cardA','cardB'].forEach(id=>{
+    const c=document.getElementById(id);
+    c.classList.remove('flipped','reversed','deal-anim');
+  });
+  document.getElementById('abResult').classList.add('hidden');
+  document.getElementById('abShare').classList.add('hidden');
+  document.getElementById('abCTA').classList.add('hidden');
+  document.getElementById('abShuffle').classList.add('hidden');
+  document.getElementById('abForm').classList.remove('hidden');
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+// =========================================
+// 星空 Canvas アニメーション
+// =========================================
+(function () {
+  const canvas = document.getElementById('starCanvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, dpr;
+  let stars    = [];
+  let shooters = [];
+  let lastShooterTime  = 0;
+  let nextShooterDelay = 5000 + Math.random() * 6000;
+
+  // リサイズ対応（Retina / 高DPI対応含む）
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    W   = window.innerWidth;
+    H   = window.innerHeight;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    genStars();
+  }
+
+  // 星を生成
+  function genStars() {
+    stars = [];
+    const count = Math.min(Math.floor(W * H / 5000), 180);
+    for (let i = 0; i < count; i++) {
+      const r = Math.random();
+      // 大・中・小 の3段階
+      const size = r < 0.05 ? 1.8 + Math.random() * 0.9   // 大（5%）
+                 : r < 0.25 ? 0.9 + Math.random() * 0.7   // 中（20%）
+                 :             0.3 + Math.random() * 0.5;  // 小（75%）
+      // 色：白・淡青・淡紫をランダムに
+      const colorRoll = Math.random();
+      const color = colorRoll < 0.15 ? { h:220, s:60 }   // 淡青
+                  : colorRoll < 0.25 ? { h:270, s:50 }   // 淡紫
+                  : null;                                  // 白
+      stars.push({
+        x:     Math.random() * W,
+        y:     Math.random() * H,
+        size,
+        baseAlpha: 0.35 + Math.random() * 0.65,
+        speed:     0.25 + Math.random() * 1.1,
+        phase:     Math.random() * Math.PI * 2,
+        color,
+      });
+    }
+  }
+
+  // 流れ星を生成
+  function spawnShooter() {
+    const angle  = (28 + Math.random() * 28) * Math.PI / 180; // 28〜56°
+    const speed  = 5 + Math.random() * 5;
+    const len    = 90 + Math.random() * 130;
+    const startX = W * (0.15 + Math.random() * 0.7);
+    const startY = H * (Math.random() * 0.45);
+    shooters.push({
+      x: startX, y: startY,
+      vx: -Math.cos(angle) * speed,
+      vy:  Math.sin(angle) * speed,
+      len,
+      life:  1.0,
+      decay: 0.012 + Math.random() * 0.012,
+    });
+  }
+
+  // 描画ループ
+  function draw(ts) {
+    ctx.clearRect(0, 0, W, H);
+
+    // 背景グラデーション
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0,   '#060616');
+    bg.addColorStop(0.5, '#0a0a1a');
+    bg.addColorStop(1,   '#0d0b1e');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    const t = ts * 0.001;
+
+    // 星を描画
+    for (const s of stars) {
+      // サイン波で明滅
+      const twinkle = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
+      const alpha   = s.baseAlpha * twinkle;
+
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+
+      if (s.color) {
+        ctx.fillStyle = `hsla(${s.color.h},${s.color.s}%,92%,${alpha})`;
+      } else {
+        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      }
+
+      // 大きい星はグロー
+      if (s.size > 1.4) {
+        ctx.shadowBlur  = s.size * 4;
+        ctx.shadowColor = s.color ? `hsl(${s.color.h},70%,85%)` : 'rgba(200,200,255,0.8)';
+      } else {
+        ctx.shadowBlur = 0;
+      }
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // 流れ星のスポーン判定
+    if (ts - lastShooterTime > nextShooterDelay) {
+      lastShooterTime  = ts;
+      nextShooterDelay = 4500 + Math.random() * 7500;
+      spawnShooter();
+      // まれに連続で2本
+      if (Math.random() < 0.18) {
+        setTimeout(spawnShooter, 350 + Math.random() * 400);
+      }
+    }
+
+    // 流れ星を描画・更新
+    for (let i = shooters.length - 1; i >= 0; i--) {
+      const sh = shooters[i];
+      sh.x   += sh.vx;
+      sh.y   += sh.vy;
+      sh.life -= sh.decay;
+
+      if (sh.life <= 0 || sh.x < -80 || sh.y > H + 80) {
+        shooters.splice(i, 1);
+        continue;
+      }
+
+      const nx  = sh.vx / Math.hypot(sh.vx, sh.vy);
+      const ny  = sh.vy / Math.hypot(sh.vx, sh.vy);
+      const tailLen = sh.len * sh.life;
+      const tx  = sh.x - nx * tailLen;
+      const ty  = sh.y - ny * tailLen;
+
+      // 尾のグラデーション
+      const grad = ctx.createLinearGradient(tx, ty, sh.x, sh.y);
+      grad.addColorStop(0,   'rgba(200,180,255,0)');
+      grad.addColorStop(0.5, `rgba(220,210,255,${sh.life * 0.3})`);
+      grad.addColorStop(1,   `rgba(255,255,255,${sh.life * 0.95})`);
+
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(sh.x, sh.y);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth   = 1.8 * sh.life;
+      ctx.lineCap     = 'round';
+      ctx.stroke();
+
+      // 先端の輝点
+      ctx.beginPath();
+      ctx.arc(sh.x, sh.y, 2.2 * sh.life, 0, Math.PI * 2);
+      ctx.fillStyle   = `rgba(255,255,255,${sh.life})`;
+      ctx.shadowBlur  = 10 * sh.life;
+      ctx.shadowColor = 'rgba(200,170,255,0.9)';
+      ctx.fill();
+      ctx.shadowBlur  = 0;
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  window.addEventListener('resize',           resize);
+  window.addEventListener('orientationchange', () => setTimeout(resize, 100));
+  requestAnimationFrame(draw);
+})();
+
+// =========================================
+// 1日1回制限（タロット）
+// =========================================
+let _abWinner = '';
+
+function getTodayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function checkDoneSingle() {
+  try { const d=localStorage.getItem('happirio_tarot_single'); return d&&JSON.parse(d).date===getTodayStr(); }
+  catch(e){return false;}
+}
+function checkDoneAB() {
+  try { const d=localStorage.getItem('happirio_tarot_ab'); return d&&JSON.parse(d).date===getTodayStr(); }
+  catch(e){return false;}
+}
+function getStoredSingle() {
+  try {
+    const d=localStorage.getItem('happirio_tarot_single'); if(!d) return null;
+    const p=JSON.parse(d); return p.date===getTodayStr()?p:null;
+  } catch(e){return null;}
+}
+function getStoredAB() {
+  try {
+    const d=localStorage.getItem('happirio_tarot_ab'); if(!d) return null;
+    const p=JSON.parse(d); return p.date===getTodayStr()?p:null;
+  } catch(e){return null;}
+}
+function saveSingleResult(cardNum, reversed) {
+  localStorage.setItem('happirio_tarot_single', JSON.stringify({date:getTodayStr(),cardNum,reversed}));
+}
+function saveABResult(numA,revA,numB,revB,lA,lB,winner) {
+  localStorage.setItem('happirio_tarot_ab', JSON.stringify({date:getTodayStr(),numA,revA,numB,revB,lA,lB,winner}));
+}
+
+// =========================================
+// 結果復元
+// =========================================
+function restoreSingle(stored) {
+  const card = TAROT.find(c=>c.num===stored.cardNum); if(!card) return;
+  singlePicked = {card, reversed: stored.reversed};
+  document.getElementById('singleFront').innerHTML = buildCardFront(card, stored.reversed);
+  const cardEl = document.getElementById('singleCard');
+  if(stored.reversed) cardEl.classList.add('reversed');
+  cardEl.classList.add('flipped');
+  document.getElementById('singleForm').classList.add('hidden');
+  document.getElementById('singleResult').classList.remove('hidden');
+  document.getElementById('singleTapHint').classList.add('hidden');
+  const meaning = document.getElementById('singleMeaning');
+  meaning.innerHTML = buildMeaning(card, stored.reversed);
+  meaning.classList.remove('hidden');
+  document.getElementById('singleShare').classList.remove('hidden');
+  document.getElementById('singleCTA').classList.remove('hidden');
+  const btn = document.getElementById('singleRetryBtn');
+  btn.classList.remove('hidden');
+  btn.textContent = 'また明日お越しください';
+  btn.disabled=true; btn.style.opacity='0.5'; btn.style.cursor='default';
+}
+
+function restoreAB(stored) {
+  const cardA=TAROT.find(c=>c.num===stored.numA), cardB=TAROT.find(c=>c.num===stored.numB);
+  if(!cardA||!cardB) return;
+  abPickedA={card:cardA,reversed:stored.revA};
+  abPickedB={card:cardB,reversed:stored.revB};
+  abFlippedA=true; abFlippedB=true;
+  _abWinner=stored.winner;
+  const lA=stored.lA||'A', lB=stored.lB||'B';
+  document.getElementById('labelA').textContent=lA;
+  document.getElementById('labelB').textContent=lB;
+  document.getElementById('frontA').innerHTML=buildCardFront(cardA,stored.revA);
+  document.getElementById('frontB').innerHTML=buildCardFront(cardB,stored.revB);
+  if(stored.revA) document.getElementById('cardA').classList.add('reversed');
+  if(stored.revB) document.getElementById('cardB').classList.add('reversed');
+  document.getElementById('cardA').classList.add('flipped');
+  document.getElementById('cardB').classList.add('flipped');
+  document.getElementById('abForm').classList.add('hidden');
+  document.getElementById('abResult').classList.remove('hidden');
+  document.getElementById('abTapHint').classList.add('hidden');
+  const meanings=document.getElementById('abMeanings');
+  meanings.innerHTML=`
+    <div class="ab-result-item item-a">
+      <h4><span class="ab-tag a">A</span>${lA} — ${cardA.nameJp}（${stored.revA?'逆位置':'正位置'}）</h4>
+      <div class="result-meaning-label">▸ このカードが示すこと</div>
+      <div class="result-meaning" style="font-size:0.78rem;">${(stored.revA?cardA.reversed:cardA.upright).meaning}</div>
+    </div>
+    <div class="ab-result-item item-b">
+      <h4><span class="ab-tag b">B</span>${lB} — ${cardB.nameJp}（${stored.revB?'逆位置':'正位置'}）</h4>
+      <div class="result-meaning-label">▸ このカードが示すこと</div>
+      <div class="result-meaning" style="font-size:0.78rem;">${(stored.revB?cardB.reversed:cardB.upright).meaning}</div>
+    </div>`;
+  meanings.classList.remove('hidden');
+  const winCard=stored.winner===lA?cardA:cardB;
+  const winRev=stored.winner===lA?stored.revA:stored.revB;
+  const winData=winRev?winCard.reversed:winCard.upright;
+  const loseCard=stored.winner===lA?cardB:cardA;
+  const loseLabel=stored.winner===lA?lB:lA;
+  const verdict=document.getElementById('abVerdict');
+  verdict.innerHTML=`
+    <div class="verdict-label">— タロットの導き —</div>
+    <div class="verdict-choice">「 ${stored.winner} 」を選びましょう</div>
+    <div class="verdict-push">${PUSH_TEMPLATES[0](stored.winner,winData.keywords)}</div>
+    <div class="verdict-card-note">
+      ✦ ${stored.winner}のカード「${winCard.nameJp}」は${winRev?'逆位置':'正位置'}で出ました。<br>
+      もう一方の「${loseLabel}」のカード「${loseCard.nameJp}」は、今は力を蓄える時と告げています。
+    </div>`;
+  verdict.classList.remove('hidden');
+  document.getElementById('abShare').classList.remove('hidden');
+  document.getElementById('abCTA').classList.remove('hidden');
+  const btn=document.getElementById('abRetryBtn');
+  btn.classList.remove('hidden');
+  btn.textContent='また明日お越しください';
+  btn.disabled=true; btn.style.opacity='0.5'; btn.style.cursor='default';
+}
+
+// =========================================
+// SNSシェア
+// =========================================
+function shareXSingle() {
+  if(!singlePicked) return;
+  const c=singlePicked.card, rev=singlePicked.reversed;
+  const data=rev?c.reversed:c.upright;
+  const text=`🔮 タロット「${c.nameJp}」（${rev?'逆位置':'正位置'}）\nキーワード: ${data.keywords.slice(0,3).join('・')}\n\n#タロット #Happirio`;
+  window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.href)}`,'_blank');
+}
+function shareLINESingle() {
+  if(!singlePicked) return;
+  const c=singlePicked.card;
+  const text=`タロット占い結果\n${c.nameJp}（${singlePicked.reversed?'逆位置':'正位置'}）`;
+  window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(text)}`,'_blank');
+}
+function shareXAB() {
+  if(!abPickedA) return;
+  const lA=document.getElementById('labelA').textContent;
+  const winCard=_abWinner===lA?abPickedA.card:abPickedB.card;
+  const winRev=_abWinner===lA?abPickedA.reversed:abPickedB.reversed;
+  const data=winRev?winCard.reversed:winCard.upright;
+  const text=`🔮 タロットの導き:「${_abWinner}」を選ぶ\n${winCard.nameJp}のメッセージ\nキーワード: ${data.keywords.slice(0,3).join('・')}\n\n#タロット #Happirio`;
+  window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.href)}`,'_blank');
+}
+function shareLINEAB() {
+  if(!abPickedA) return;
+  const text=`タロット占い結果\n「${_abWinner}」を選びましょう`;
+  window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(text)}`,'_blank');
+}
+</script>
+</body>
+</html>

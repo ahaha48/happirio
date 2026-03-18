@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>おみくじ占い</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+      background: #1a0a0a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      color: #f5e6c8;
+    }
+
+    /* 背景の桜 */
+    .bg-petals {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .petal {
+      position: absolute;
+      top: -20px;
+      font-size: 1.2rem;
+      opacity: 0.15;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      to { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 420px;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    /* ヘッダー */
+    .header {
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 2.2rem;
+      color: #e8c97a;
+      letter-spacing: 0.3em;
+      text-shadow: 0 0 20px rgba(232,201,122,0.5);
+    }
+    .header p {
+      font-size: 0.85rem;
+      color: #b8956a;
+      letter-spacing: 0.1em;
+      margin-top: 6px;
+    }
+
+    /* おみくじ筒 */
+    .shrine {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .tube-container {
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .tube-container:active { transform: scale(0.95); }
+
+    .tube {
+      width: 80px;
+      height: 140px;
+      background: linear-gradient(160deg, #8b1a1a 0%, #5c1010 40%, #3d0a0a 100%);
+      border-radius: 8px 8px 14px 14px;
+      position: relative;
+      box-shadow:
+        inset 2px 0 6px rgba(255,180,100,0.15),
+        inset -2px 0 4px rgba(0,0,0,0.4),
+        0 6px 20px rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .tube::before {
+      content: '御籤';
+      writing-mode: vertical-rl;
+      color: rgba(232,201,122,0.8);
+      font-size: 1.1rem;
+      letter-spacing: 0.2em;
+      text-shadow: 0 0 8px rgba(232,201,122,0.4);
+    }
+    .tube-top {
+      width: 88px;
+      height: 18px;
+      background: linear-gradient(90deg, #6b1414, #9b2020, #6b1414);
+      border-radius: 6px 6px 0 0;
+      box-shadow: 0 -3px 8px rgba(0,0,0,0.4);
+    }
+    .tube-hole {
+      width: 30px;
+      height: 6px;
+      background: #1a0505;
+      border-radius: 3px;
+      margin: 0 auto 2px;
+      position: relative;
+    }
+
+    /* 振るアニメーション */
+    @keyframes shake {
+      0%,100% { transform: rotate(0deg); }
+      10% { transform: rotate(-8deg) translateX(-4px); }
+      20% { transform: rotate(8deg) translateX(4px); }
+      30% { transform: rotate(-6deg) translateX(-3px); }
+      40% { transform: rotate(6deg) translateX(3px); }
+      50% { transform: rotate(-4deg) translateX(-2px); }
+      60% { transform: rotate(4deg) translateX(2px); }
+      70% { transform: rotate(-2deg) translateX(-1px); }
+      80% { transform: rotate(2deg) translateX(1px); }
+    }
+    .shaking {
+      animation: shake 0.8s ease-in-out;
+    }
+
+    .draw-btn {
+      background: linear-gradient(135deg, #c8922a, #e8c97a, #c8922a);
+      color: #3d1a00;
+      border: none;
+      padding: 14px 40px;
+      font-size: 1.1rem;
+      font-family: inherit;
+      letter-spacing: 0.2em;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(200,146,42,0.4);
+      transition: all 0.2s;
+      font-weight: bold;
+    }
+    .draw-btn:hover {
+      box-shadow: 0 6px 25px rgba(232,201,122,0.6);
+      transform: translateY(-2px);
+    }
+    .draw-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 8px rgba(200,146,42,0.3);
+    }
+    .draw-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* おみくじ結果 */
+    .result-card {
+      width: 100%;
+      background: linear-gradient(180deg, #fdf8ef 0%, #f5e9cc 100%);
+      border-radius: 4px 4px 8px 8px;
+      padding: 0;
+      box-shadow:
+        0 8px 30px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.8);
+      overflow: hidden;
+      animation: unfold 0.6s ease-out;
+      transform-origin: top center;
+      display: none;
+    }
+    @keyframes unfold {
+      from { transform: scaleY(0); opacity: 0; }
+      to   { transform: scaleY(1); opacity: 1; }
+    }
+    .result-card.show { display: block; }
+
+    .card-top-border {
+      height: 12px;
+      background: repeating-linear-gradient(
+        90deg,
+        #8b1a1a 0px, #8b1a1a 8px,
+        #c8922a 8px, #c8922a 16px
+      );
+    }
+    .card-bottom-border {
+      height: 12px;
+      background: repeating-linear-gradient(
+        90deg,
+        #c8922a 0px, #c8922a 8px,
+        #8b1a1a 8px, #8b1a1a 16px
+      );
+    }
+
+    .card-body {
+      padding: 20px 24px 24px;
+      color: #2a1a00;
+      font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    }
+
+    .card-title {
+      text-align: center;
+      font-size: 0.75rem;
+      letter-spacing: 0.4em;
+      color: #8b1a1a;
+      margin-bottom: 8px;
+    }
+
+    .fortune-rank {
+      text-align: center;
+      font-size: 3.5rem;
+      font-weight: bold;
+      line-height: 1;
+      margin: 8px 0 4px;
+      letter-spacing: 0.1em;
+    }
+    .fortune-rank.daikichi  { color: #c8130a; text-shadow: 0 2px 8px rgba(200,19,10,0.3); }
+    .fortune-rank.chukichi  { color: #c87a0a; }
+    .fortune-rank.shokichi  { color: #2a7a2a; }
+    .fortune-rank.kichi     { color: #0a5a9b; }
+    .fortune-rank.suekichi  { color: #6a3a9b; }
+    .fortune-rank.kyo       { color: #555;    }
+    .fortune-rank.daikyo    { color: #333;    }
+
+    .fortune-sub {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #666;
+      letter-spacing: 0.2em;
+      margin-bottom: 16px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #c8a87a;
+      margin: 12px 0;
+    }
+
+    .poem {
+      text-align: center;
+      font-size: 0.9rem;
+      line-height: 2;
+      color: #4a3010;
+      letter-spacing: 0.05em;
+      padding: 8px 0;
+      font-style: italic;
+    }
+
+    hr.divider { margin: 14px 0; }
+
+    .fortune-details {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .fortune-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .fortune-label {
+      font-size: 0.7rem;
+      color: #8b1a1a;
+      letter-spacing: 0.15em;
+      border: 1px solid #8b1a1a;
+      border-radius: 3px;
+      padding: 2px 6px;
+      white-space: nowrap;
+      min-width: 52px;
+      text-align: center;
+    }
+    .fortune-text {
+      font-size: 0.82rem;
+      color: #3a2510;
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .retry-btn {
+      width: 100%;
+      background: transparent;
+      color: #b8956a;
+      border: 1px solid #b8956a;
+      padding: 10px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      letter-spacing: 0.2em;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 16px;
+    }
+    .retry-btn:hover {
+      background: rgba(184,149,106,0.1);
+      color: #e8c97a;
+      border-color: #e8c97a;
+    }
+
+    .footer {
+      font-size: 0.7rem;
+      color: #5a3a2a;
+      letter-spacing: 0.1em;
+      text-align: center;
+    }
+    .nav-link {
+      color: #b8956a;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: #e8c97a; }
+  </style>
+</head>
+<body>
+
+<!-- 背景の花びら -->
+<div class="bg-petals" id="bgPetals"></div>
+
+<div class="container">
+  <div style="width:100%;max-width:420px;">
+    <a href="../index.html" class="nav-link">← 占いトップへ</a>
+  </div>
+  <div class="header">
+    <h1>おみくじ</h1>
+    <p>〜 今日のご縁を占います 〜</p>
+  </div>
+
+  <div class="shrine" id="shrine">
+    <div class="tube-container" id="tubeContainer" onclick="drawOmikuji()">
+      <div class="tube-top">
+        <div class="tube-hole"></div>
+      </div>
+      <div class="tube"></div>
+    </div>
+    <button class="draw-btn" id="drawBtn" onclick="drawOmikuji()">おみくじを引く</button>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="card-top-border"></div>
+    <div class="card-body">
+      <div class="card-title">— 御 神 籤 —</div>
+      <div class="fortune-rank" id="fortuneRank"></div>
+      <div class="fortune-sub" id="fortuneSub"></div>
+      <hr class="divider">
+      <div class="poem" id="poem"></div>
+      <hr class="divider">
+      <div class="fortune-details" id="fortuneDetails"></div>
+      <button class="retry-btn" onclick="reset()">もう一度引く</button>
+    </div>
+    <div class="card-bottom-border"></div>
+  </div>
+
+  <div class="footer">毎日一度、心を込めてお引きください</div>
+</div>
+
+<script>
+  // 花びら生成
+  const petals = document.getElementById('bgPetals');
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.textContent = ['🌸','✿','❀','🌺'][Math.floor(Math.random()*4)];
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.animationDuration = (8 + Math.random() * 12) + 's';
+    p.style.animationDelay = (Math.random() * 15) + 's';
+    p.style.fontSize = (0.8 + Math.random() * 1.2) + 'rem';
+    petals.appendChild(p);
+  }
+
+  const fortunes = [
+    {
+      rank: '大吉', sub: 'だいきち', cls: 'daikichi',
+      poem: '春風に　花咲き誇る　この道は\n光あふれて　前途洋々',
+      details: [
+        { label: '総　運', text: '万事において最高の運気。思い切った行動が大きな実りをもたらすでしょう。' },
+        { label: '恋　愛', text: '良縁に恵まれる時。積極的にアプローチすることで素晴らしい出会いが訪れます。' },
+        { label: '仕　事', text: '実力が認められ、昇進・昇給の好機。新しい企画や提案を積極的に進めましょう。' },
+        { label: '健　康', text: '心身ともに充実。ただし油断は禁物。適度な運動で体調を維持してください。' },
+        { label: '金　運', text: '臨時収入や思わぬ利益が見込めます。大きな投資にも吉の時期です。' },
+      ]
+    },
+    {
+      rank: '中吉', sub: 'ちゅうきち', cls: 'chukichi',
+      poem: '流れゆく　川のほとりに　咲く花よ\n穏やかな日々　続きたるかな',
+      details: [
+        { label: '総　運', text: '安定した良い運気。焦らず着実に進めることで望む結果が得られます。' },
+        { label: '恋　愛', text: '関係は順調。相手への思いやりを忘れずに、じっくり絆を深めましょう。' },
+        { label: '仕　事', text: 'コツコツとした努力が報われる時。周囲との協力を大切にしてください。' },
+        { label: '健　康', text: 'おおむね良好。規則正しい生活を心がけることで更に充実します。' },
+        { label: '金　運', text: '堅実な収支が続きます。無駄遣いを避けることで着実に蓄財できます。' },
+      ]
+    },
+    {
+      rank: '小吉', sub: 'しょうきち', cls: 'shokichi',
+      poem: '霧の中　ひとつ灯りが　見えている\n踏み出す一歩　道は開けん',
+      details: [
+        { label: '総　運', text: '小さな幸運が重なる時期。日常の小さな喜びを大切に過ごしましょう。' },
+        { label: '恋　愛', text: '派手さはないが、温かい関係が育まれます。誠実さが鍵となります。' },
+        { label: '仕　事', text: '地道な作業が後で実を結びます。今は土台を固めることに集中を。' },
+        { label: '健　康', text: '体を酷使しないよう注意。早寝早起きを心がけましょう。' },
+        { label: '金　運', text: '大きな出費は避けて。少額の節約を積み重ねることが吉です。' },
+      ]
+    },
+    {
+      rank: '吉', sub: 'きち', cls: 'kichi',
+      poem: '山の端　雲間に宿る　淡き月\n静かに照らす　明日への道',
+      details: [
+        { label: '総　運', text: 'まずまずの運気。無理せず自然体で過ごすことが好結果につながります。' },
+        { label: '恋　愛', text: '焦らないことが大切。自分磨きをしながら縁を待ちましょう。' },
+        { label: '仕　事', text: '平穏な時期。今できることをしっかりとこなすことが評価されます。' },
+        { label: '健　康', text: '体調は安定。ストレスを溜め込まないよう気分転換を忘れずに。' },
+        { label: '金　運', text: '収支バランスは良好。計画的な支出を意識しましょう。' },
+      ]
+    },
+    {
+      rank: '末吉', sub: 'すえきち', cls: 'suekichi',
+      poem: '冬ごもる　種の中にも　春の芽よ\n時を待てば　やがて咲き出づ',
+      details: [
+        { label: '総　運', text: '今は助走の時期。将来の大きな飛躍のため、今は力を蓄えましょう。' },
+        { label: '恋　愛', text: 'すぐには進展しにくいかも。友人関係から育てていくことが吉。' },
+        { label: '仕　事', text: '結果はすぐに出ないかもしれませんが、着実な準備が大切です。' },
+        { label: '健　康', text: '油断をしないで。早めの対処と予防を心がけましょう。' },
+        { label: '金　運', text: 'しばらくは倹約を。大きな出費は先送りにすることを推奨します。' },
+      ]
+    },
+    {
+      rank: '凶', sub: 'きょう', cls: 'kyo',
+      poem: '嵐にも　揺れながら立つ　大樹かな\n根をはり待てば　春また来たる',
+      details: [
+        { label: '総　運', text: '試練の時。困難にめげず、一歩ずつ前進することで運気は好転します。' },
+        { label: '恋　愛', text: '誤解やすれ違いに注意。言葉を選び、丁寧なコミュニケーションを。' },
+        { label: '仕　事', text: '無理は禁物。現状維持を心がけ、新しい挑戦は時期を改めましょう。' },
+        { label: '健　康', text: '体調を崩しやすい時期。無理をせず、休息を十分にとってください。' },
+        { label: '金　運', text: '金銭トラブルに注意。大きな取引や保証人は引き受けないように。' },
+      ]
+    },
+    {
+      rank: '大凶', sub: 'だいきょう', cls: 'daikyo',
+      poem: '暗き夜　一番星を　仰ぎ見て\n心静めて　夜明けを待とう',
+      details: [
+        { label: '総　運', text: '最も試練の時。しかしこの経験が後の大きな成長につながります。焦らず静かに過ごしましょう。' },
+        { label: '恋　愛', text: '感情的になりやすい時期。衝動的な行動は控え、冷静さを保つことが大切です。' },
+        { label: '仕　事', text: '重要な決断は保留に。今は守りに徹し、足元を固めることに専念してください。' },
+        { label: '健　康', text: '体調管理に最大の注意を。少しでも異変を感じたら早めに受診してください。' },
+        { label: '金　運', text: '金運最低の時。余計な出費・投資・契約は厳に慎みましょう。' },
+      ]
+    },
+  ];
+
+  // 確率重み付き
+  const weights = [15, 20, 20, 20, 15, 7, 3]; // 大吉〜大凶
+
+  function weightedRandom() {
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < weights.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return i;
+    }
+    return 0;
+  }
+
+  // ---- Web Audio SE ----
+  let audioCtx = null;
+  function getCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  // カラカラと筒を振る音（短いノイズバースト×複数）
+  function playShakeSound() {
+    const ctx = getCtx();
+    const count = 18;
+    for (let i = 0; i < count; i++) {
+      const t = ctx.currentTime + i * 0.048;
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.04, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let j = 0; j < data.length; j++) data[j] = (Math.random() * 2 - 1) * 0.6;
+
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+
+      const bpf = ctx.createBiquadFilter();
+      bpf.type = 'bandpass';
+      bpf.frequency.value = 2800 + Math.random() * 800;
+      bpf.Q.value = 1.2;
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.28, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.038);
+
+      src.connect(bpf).connect(gain).connect(ctx.destination);
+      src.start(t);
+      src.stop(t + 0.04);
+    }
+  }
+
+  // 紙をめくる音（ホワイトノイズのスウィープ）
+  function playUnfoldSound() {
+    const ctx = getCtx();
+    const dur = 0.45;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1);
+
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+
+    const bpf = ctx.createBiquadFilter();
+    bpf.type = 'bandpass';
+    bpf.frequency.setValueAtTime(800, ctx.currentTime);
+    bpf.frequency.linearRampToValueAtTime(3200, ctx.currentTime + 0.2);
+    bpf.frequency.linearRampToValueAtTime(600, ctx.currentTime + dur);
+    bpf.Q.value = 0.8;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.05);
+    gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+
+    src.connect(bpf).connect(gain).connect(ctx.destination);
+    src.start(ctx.currentTime);
+    src.stop(ctx.currentTime + dur);
+  }
+
+  // チーンと鳴る鈴の音
+  function playBellSound(freq = 880, delay = 0) {
+    const ctx = getCtx();
+    const t = ctx.currentTime + delay;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.92, t + 1.2);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0, t);
+    gain.gain.linearRampToValueAtTime(0.35, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+
+    // 倍音を少し追加してリアルな鈴音に
+    const osc2 = ctx.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(freq * 2.76, t);
+    const gain2 = ctx.createGain();
+    gain2.gain.setValueAtTime(0.0, t);
+    gain2.gain.linearRampToValueAtTime(0.08, t + 0.01);
+    gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+
+    osc.connect(gain).connect(ctx.destination);
+    osc2.connect(gain2).connect(ctx.destination);
+    osc.start(t); osc.stop(t + 1.9);
+    osc2.start(t); osc2.stop(t + 0.7);
+  }
+
+  // 大吉用ファンファーレ（明るい和音の連打）
+  function playFanfare() {
+    const ctx = getCtx();
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+    notes.forEach((freq, i) => {
+      const t = ctx.currentTime + i * 0.12;
+      const osc = ctx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0, t);
+      gain.gain.linearRampToValueAtTime(0.22, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t); osc.stop(t + 0.6);
+    });
+  }
+
+  // 大凶用 低く暗い音
+  function playDarkSound() {
+    const ctx = getCtx();
+    const t = ctx.currentTime;
+    [110, 130.81].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.value = freq;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0, t + i * 0.1);
+      gain.gain.linearRampToValueAtTime(0.15, t + i * 0.1 + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.1 + 1.2);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t + i * 0.1); osc.stop(t + i * 0.1 + 1.3);
+    });
+  }
+  // ---- ここまでSE ----
+
+  function getTodayString() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function checkAlreadyDrawn() {
+    try {
+      const data = localStorage.getItem('omikuji_data');
+      if (!data) return false;
+      return JSON.parse(data).date === getTodayString();
+    } catch (e) { return false; }
+  }
+
+  function getStoredFortuneIndex() {
+    try {
+      const data = localStorage.getItem('omikuji_data');
+      if (!data) return null;
+      return JSON.parse(data).fortuneIndex;
+    } catch (e) { return null; }
+  }
+
+  function drawOmikuji() {
+    if (checkAlreadyDrawn()) return;
+    const btn = document.getElementById('drawBtn');
+    const tube = document.getElementById('tubeContainer');
+    if (btn.disabled) return;
+    btn.disabled = true;
+
+    playShakeSound();
+
+    // 振るアニメーション
+    tube.classList.add('shaking');
+    setTimeout(() => {
+      tube.classList.remove('shaking');
+      showResult(true);
+    }, 900);
+  }
+
+  function showResult(isNew) {
+    let fortuneIndex;
+    if (isNew) {
+      fortuneIndex = weightedRandom();
+      localStorage.setItem('omikuji_data', JSON.stringify({ date: getTodayString(), fortuneIndex }));
+    } else {
+      fortuneIndex = getStoredFortuneIndex();
+    }
+    const fortune = fortunes[fortuneIndex];
+
+    // SE：紙をめくる音 → 鈴 → 運勢別SE（新規引いた時のみ）
+    if (isNew) {
+      playUnfoldSound();
+      playBellSound(880, 0.15);
+      if (fortune.cls === 'daikichi') {
+        setTimeout(playFanfare, 350);
+      } else if (fortune.cls === 'daikyo') {
+        setTimeout(playDarkSound, 350);
+      } else {
+        playBellSound(660, 0.45); // 通常運勢は余韻の鈴
+      }
+    }
+
+    document.getElementById('fortuneRank').textContent = fortune.rank;
+    document.getElementById('fortuneRank').className = 'fortune-rank ' + fortune.cls;
+    document.getElementById('fortuneSub').textContent = fortune.sub;
+    document.getElementById('poem').textContent = fortune.poem;
+
+    const detailsEl = document.getElementById('fortuneDetails');
+    detailsEl.innerHTML = '';
+    fortune.details.forEach(d => {
+      const item = document.createElement('div');
+      item.className = 'fortune-item';
+      item.innerHTML = `<span class="fortune-label">${d.label}</span><span class="fortune-text">${d.text}</span>`;
+      detailsEl.appendChild(item);
+    });
+
+    const card = document.getElementById('resultCard');
+    card.classList.add('show');
+    card.style.animation = 'none';
+    requestAnimationFrame(() => {
+      card.style.animation = '';
+      card.classList.add('show');
+    });
+
+    // 結果までスクロール（新規のみ）
+    if (isNew) {
+      setTimeout(() => {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+
+    document.getElementById('shrine').style.opacity = '0.4';
+
+    // 1日1回制限：リトライボタンを無効化
+    const retryBtn = document.querySelector('.retry-btn');
+    retryBtn.textContent = 'また明日お越しください';
+    retryBtn.disabled = true;
+    retryBtn.style.opacity = '0.5';
+    retryBtn.style.cursor = 'default';
+  }
+
+  function reset() {
+    if (checkAlreadyDrawn()) return;
+    const card = document.getElementById('resultCard');
+    card.classList.remove('show');
+    document.getElementById('drawBtn').disabled = false;
+    document.getElementById('shrine').style.opacity = '1';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ページ読み込み時：本日すでに引いていれば結果を復元
+  document.addEventListener('DOMContentLoaded', () => {
+    if (checkAlreadyDrawn()) {
+      document.getElementById('drawBtn').disabled = true;
+      showResult(false);
+    }
+  });
+</script>
+</body>
+</html>
