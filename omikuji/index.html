@@ -328,9 +328,58 @@
       transition: color 0.2s;
     }
     .nav-link:hover { color: #e8c97a; }
+
+    /* BGMコントロール */
+    .bgm-ctrl {
+      position: fixed; bottom: 16px; right: 16px; z-index: 100;
+      display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+    }
+    .bgm-toggle {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(42,10,10,0.9); border: 1px solid #8b1a1a;
+      cursor: pointer; font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      backdrop-filter: blur(4px);
+    }
+    .bgm-toggle:hover { border-color: #e8c97a; box-shadow: 0 0 12px rgba(232,201,122,0.3); }
+    .bgm-volume-panel {
+      background: rgba(42,10,10,0.92); border: 1px solid #8b1a1a;
+      border-radius: 20px; padding: 8px 14px;
+      display: flex; align-items: center; gap: 8px;
+      backdrop-filter: blur(6px);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .bgm-volume-panel.panel-hidden {
+      opacity: 0; pointer-events: none;
+      transform: translateY(6px) scale(0.95);
+    }
+    .vol-icon { font-size: 0.85rem; }
+    .vol-slider {
+      -webkit-appearance: none; appearance: none;
+      width: 90px; height: 3px;
+      background: linear-gradient(to right, #c8922a var(--val,35%), #3a1010 var(--val,35%));
+      border-radius: 2px; outline: none; cursor: pointer;
+    }
+    .vol-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px;
+      border-radius: 50%; background: #e8c97a;
+      box-shadow: 0 0 6px rgba(232,201,122,0.5); cursor: pointer;
+    }
+    .vol-pct { font-size: 0.65rem; color: #b8956a; width: 26px; text-align: right; }
   </style>
 </head>
 <body>
+<audio id="bgm" src="静穏みくじの庭.mp3" loop></audio>
+<div class="bgm-ctrl">
+  <div class="bgm-volume-panel panel-hidden" id="volPanel">
+    <span class="vol-icon">🔉</span>
+    <input class="vol-slider" id="volSlider" type="range" min="0" max="100" value="35"
+      oninput="onVolChange(this)">
+    <span class="vol-pct" id="volPct">35%</span>
+  </div>
+  <button class="bgm-toggle" id="bgmToggle" onclick="toggleBGM()">🎵</button>
+</div>
 
 <!-- 背景の花びら -->
 <div class="bg-petals" id="bgPetals"></div>
@@ -724,6 +773,47 @@
       showResult(false);
     }
   });
+
+  // =========================================
+  // BGM
+  // =========================================
+  let bgmStarted = false;
+  let bgmMuted = false;
+  let volPanelOpen = false;
+  const bgmEl = document.getElementById('bgm');
+  bgmEl.volume = 0.35;
+
+  function startBGM() {
+    if (bgmStarted) return;
+    bgmStarted = true;
+    bgmEl.play().catch(() => {});
+  }
+  document.addEventListener('click',      () => startBGM(), { once: true });
+  document.addEventListener('touchstart', () => startBGM(), { once: true });
+
+  function toggleBGM() {
+    if (!bgmStarted) startBGM();
+    volPanelOpen = !volPanelOpen;
+    const panel = document.getElementById('volPanel');
+    if (volPanelOpen) {
+      panel.classList.remove('panel-hidden');
+    } else {
+      panel.classList.add('panel-hidden');
+      bgmMuted = !bgmMuted;
+      bgmEl.muted = bgmMuted;
+      document.getElementById('bgmToggle').textContent = bgmMuted ? '🔇' : '🎵';
+    }
+  }
+
+  function onVolChange(slider) {
+    const val = parseInt(slider.value);
+    bgmEl.volume = val / 100;
+    bgmEl.muted = false;
+    bgmMuted = false;
+    document.getElementById('bgmToggle').textContent = val === 0 ? '🔇' : '🎵';
+    document.getElementById('volPct').textContent = val + '%';
+    slider.style.setProperty('--val', val + '%');
+  }
 </script>
 </body>
 </html>
