@@ -395,6 +395,28 @@ body {
 .tarot-footer a{color:#5a4a7a;text-decoration:none;}
 .tarot-footer a:hover{text-decoration:underline;}
 
+/* 運勢カテゴリ */
+.tarot-fortune{margin-top:16px;border-top:1px solid #2a2a5a;padding-top:14px;}
+.tarot-fortune-title{font-size:0.68rem;letter-spacing:0.22em;color:#6a5a8a;margin-bottom:12px;text-align:center;}
+.t-fortune-cat{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(42,42,90,0.45);}
+.t-fortune-cat:last-of-type{border-bottom:none;margin-bottom:8px;padding-bottom:0;}
+.t-fortune-cat-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.t-fortune-lbl{font-size:0.66rem;letter-spacing:0.18em;padding:2px 8px;border-radius:3px;}
+.t-fortune-lbl.general{color:#c8a8e8;border:1px solid #4a2a7a;}
+.t-fortune-lbl.love{color:#e8a8c8;border:1px solid #7a2a5a;}
+.t-fortune-lbl.work{color:#a0d8b0;border:1px solid #2a6a4a;}
+.t-fortune-stars{font-size:0.78rem;letter-spacing:2px;}
+.t-star-on{color:#d4a840;}
+.t-star-off{color:#2a2a4a;}
+.t-fortune-txt{font-size:0.8rem;color:#b8b0d0;line-height:1.75;}
+/* ラッキーグリッド */
+.t-lucky-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.t-lucky-cell{background:rgba(30,20,60,0.6);border:1px solid #2a2a5a;border-radius:8px;padding:10px 12px;text-align:center;}
+.t-lucky-cell.full{grid-column:1/-1;background:rgba(42,16,80,0.2);border-color:rgba(90,30,160,0.3);}
+.t-lucky-lbl{font-size:0.58rem;color:#6a5a8a;letter-spacing:0.15em;margin-bottom:4px;}
+.t-lucky-val{font-size:0.88rem;color:#c8c0e0;font-weight:bold;}
+.t-lucky-cell.full .t-lucky-val{font-size:0.78rem;font-weight:normal;line-height:1.5;}
+
 /* ========== スマホ対応 ========== */
 @media (max-width: 380px) {
   .header h1 { font-size: 1.6rem; }
@@ -715,6 +737,159 @@ const TAROT = [
 ];
 
 // =========================================
+// 運勢データ（タロット用）
+// =========================================
+// カードエネルギー（0=最も試練, 4=最もポジティブ）
+const CARD_ENERGY = {
+  '0':3,'I':4,'II':3,'III':4,'IV':3,'V':3,'VI':4,'VII':4,
+  'VIII':4,'IX':2,'X':3,'XI':3,'XII':2,'XIII':1,'XIV':3,
+  'XV':0,'XVI':0,'XVII':4,'XVIII':1,'XIX':4,'XX':3,'XXI':4
+};
+
+const TAROT_GENERAL = [
+  'カードのエネルギーが今日の行動を照らしています。直感を信じ、一歩ずつ着実に進む時です。',
+  '宇宙の意志があなたの背中を押しています。温めてきた思いを行動に変える絶好の機会です。',
+  '星の配置とカードが一致しています。今日は特別な出来事や出会いが訪れるかもしれません。',
+  'カードが告げる変化の風を感じてください。新しいサイクルが始まります。流れに乗りましょう。',
+  'カードのエネルギーが内なる力を呼び起こしています。自分を信じることが今日の鍵です。',
+  '平穏な流れの中に重要な選択が潜んでいます。焦らず、心の声に耳を傾けてください。',
+  '「今は立ち止まって観察する時」とカードが告げています。周囲をよく見渡すと答えが見えます。',
+  '挑戦的なエネルギーが漂っています。それはあなたを成長させる試練。乗り越えた先に光があります。',
+  'タロットは今日、慎重さを勧めています。重要な決断は一晩置いて、冷静に再考しましょう。',
+  '逆風の中にも守る力があります。信頼できる人に相談することで新しい道が開けるでしょう。',
+  '今日は内省の日です。外の世界より自分の内側に目を向けることで、大切なものが見えてきます。',
+  'カードは転換点を示しています。古いものを手放し、新しい可能性を受け入れる準備をしましょう。',
+];
+
+const TAROT_LOVE = [
+  '愛のエネルギーが満ちています。素直な気持ちを言葉にすることで、関係に温かい光が灯ります。',
+  '星が縁を結ぼうとしています。新しい出会いの場に積極的に踏み出すと、心が震える縁があるかも。',
+  '大切な人との絆が深まる予兆があります。日常の小さな気遣いが愛を育む種になっています。',
+  '恋愛面では穏やかな流れが続きます。焦らず相手のペースに寄り添うことで信頼関係が深まります。',
+  'コミュニケーションを大切にする日です。思いやりのある言葉が心の距離を縮めてくれます。',
+  '今は自分自身を磨く時期かもしれません。内側から輝く魅力が、やがて良い縁を引き寄せます。',
+  '感情が揺れやすい日。相手への期待を手放し、今この瞬間のつながりを大切にしましょう。',
+  '恋愛面での誤解が生じやすい時。言葉より行動で誠実さを示すことが大切です。',
+  '今日は一人の時間を楽しんで。自分を愛することが、次の縁を呼び込む準備になっています。',
+  '心の扉をそっと開く勇気が、新しい愛の物語を始めるきっかけになるかもしれません。',
+];
+
+const TAROT_WORK = [
+  'あなたの才能と努力が認められる日。自信を持って自分のビジョンを発信しましょう。',
+  '新しいアイデアが閃きやすい時期です。思いついたことをすぐにメモして実行に移す準備を。',
+  'チームの力を活かす日です。周囲と協力することで一人では成し遂げられない成果が生まれます。',
+  '着実な努力が実を結ぼうとしています。先延ばしにしていたタスクを今日こそ片付けましょう。',
+  '仕事面では慎重さが求められます。契約や重要な連絡は念入りに確認してから進めてください。',
+  '今日は計画を立てるのに最適な日。大きな目標を小さなステップに分解して考えてみましょう。',
+  '予期せぬ変化が仕事面に訪れるかもしれません。柔軟に対応することでピンチをチャンスに変えられます。',
+  '集中力が途切れがちな日。優先順位を決め、一つのことに集中することが結果への近道です。',
+  '人間関係に注意が必要です。感謝の言葉を忘れず、丁寧なコミュニケーションを心がけましょう。',
+  '今は休息も仕事のうち。無理をせず充電することで、明日からのパフォーマンスが上がります。',
+];
+
+const TAROT_LUCKY_ITEMS = [
+  '月の光石','紫水晶のかけら','星形のリング','羽根ペン','深紅のロウソク',
+  '古い鍵','タロットポーチ','夜空色のスカーフ','金色のコイン','ラベンダーの束',
+  '黒い手帳','真珠のピアス',
+];
+const TAROT_LUCKY_COLORS = [
+  '深紫','星月夜色','神秘の藍','黄金色','琥珀色',
+  '月白','深紅','宵の藤色','緑青','真珠色',
+  '蒼穹色','黒曜石色',
+];
+const TAROT_LUCKY_ACTIONS = [
+  '就寝前にカードに今日の出来事を問いかけてみよう',
+  '朝日を浴びながら3回深呼吸をしよう',
+  '大切な人に感謝の言葉を伝えよう',
+  '普段と違うカフェでゆっくり過ごしてみよう',
+  '夜空を眺め、願い事を心の中で唱えてみよう',
+  '日記に今感じている気持ちを素直に書いてみよう',
+  '好きな音楽を聴きながら散歩しよう',
+  '今日出会った人に、小さな親切をしてみよう',
+  '部屋に一輪の花を飾って運気を上げよう',
+  '直感で選んだ道を歩いてみよう',
+  '瞑想を5分だけ試してみよう',
+  '今日の気分でお守りになりそうな言葉を書き留めよう',
+];
+
+// 運勢シード関数
+function tarotTodaySeed() {
+  const d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth()+1) * 100 + d.getDate();
+}
+function tarotRand(seed) {
+  let x = Math.sin(seed + 1) * 10000;
+  return x - Math.floor(x);
+}
+function tarotPick(arr, cardNum, reversed, offset) {
+  const idx = TAROT.findIndex(c => c.num === cardNum);
+  const seed = tarotTodaySeed() * 11 + idx * 7 + (reversed ? 50 : 0) + offset;
+  return arr[Math.floor(tarotRand(seed) * arr.length)];
+}
+function tarotStars(cardNum, reversed, offset) {
+  const base = (CARD_ENERGY[cardNum] ?? 2) + 1; // 1-5
+  const idx = TAROT.findIndex(c => c.num === cardNum);
+  const seed = tarotTodaySeed() * 13 + idx * 5 + (reversed ? 30 : 0) + offset;
+  const delta = Math.floor(tarotRand(seed) * 3) - 1; // -1, 0, +1
+  return Math.max(1, Math.min(5, base + delta));
+}
+
+function buildFortune(cardNum, reversed) {
+  const general = tarotPick(TAROT_GENERAL, cardNum, reversed, 1);
+  const love    = tarotPick(TAROT_LOVE,    cardNum, reversed, 2);
+  const work    = tarotPick(TAROT_WORK,    cardNum, reversed, 3);
+  const item    = tarotPick(TAROT_LUCKY_ITEMS,   cardNum, reversed, 4);
+  const color   = tarotPick(TAROT_LUCKY_COLORS,  cardNum, reversed, 5);
+  const action  = tarotPick(TAROT_LUCKY_ACTIONS, cardNum, reversed, 6);
+  const gs = tarotStars(cardNum, reversed, 1);
+  const ls = tarotStars(cardNum, reversed, 2);
+  const ws = tarotStars(cardNum, reversed, 3);
+  const starHtml = (n) =>
+    Array.from({length:5}, (_,i) =>
+      `<span class="${i<n?'t-star-on':'t-star-off'}">★</span>`
+    ).join('');
+  return `
+    <div class="tarot-fortune">
+      <div class="tarot-fortune-title">— 今日の運勢 —</div>
+      <div class="t-fortune-cat">
+        <div class="t-fortune-cat-hd">
+          <span class="t-fortune-lbl general">総 合 運</span>
+          <span class="t-fortune-stars">${starHtml(gs)}</span>
+        </div>
+        <div class="t-fortune-txt">${general}</div>
+      </div>
+      <div class="t-fortune-cat">
+        <div class="t-fortune-cat-hd">
+          <span class="t-fortune-lbl love">恋 愛 運</span>
+          <span class="t-fortune-stars">${starHtml(ls)}</span>
+        </div>
+        <div class="t-fortune-txt">${love}</div>
+      </div>
+      <div class="t-fortune-cat">
+        <div class="t-fortune-cat-hd">
+          <span class="t-fortune-lbl work">仕 事 運</span>
+          <span class="t-fortune-stars">${starHtml(ws)}</span>
+        </div>
+        <div class="t-fortune-txt">${work}</div>
+      </div>
+      <div class="t-lucky-grid">
+        <div class="t-lucky-cell">
+          <div class="t-lucky-lbl">LUCKY ITEM</div>
+          <div class="t-lucky-val">${item}</div>
+        </div>
+        <div class="t-lucky-cell">
+          <div class="t-lucky-lbl">LUCKY COLOR</div>
+          <div class="t-lucky-val">${color}</div>
+        </div>
+        <div class="t-lucky-cell full">
+          <div class="t-lucky-lbl">TODAY'S ACTION</div>
+          <div class="t-lucky-val">${action}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// =========================================
 // BGM
 // =========================================
 let bgmStarted = false;
@@ -867,7 +1042,8 @@ function buildMeaning(card, reversed, label) {
     <div class="result-meaning-label">▸ メッセージ</div>
     <div class="result-meaning">${data.meaning}</div>
     <div class="result-meaning-label">▸ キーワード</div>
-    <div class="result-keyword-row">${data.keywords.map(k=>`<span class="keyword-tag">${k}</span>`).join('')}</div>`;
+    <div class="result-keyword-row">${data.keywords.map(k=>`<span class="keyword-tag">${k}</span>`).join('')}</div>
+    ${buildFortune(card.num, reversed)}`;
 }
 
 // =========================================
@@ -1116,7 +1292,8 @@ function showABResult() {
     <div class="verdict-card-note">
       ✦ ${winner}のカード「${winPick.card.nameJp}」は${winPick.reversed?'逆位置':'正位置'}で出ました。<br>
       もう一方の「${winPick===abPickedA?labelB:labelA}」のカード「${losePick.card.nameJp}」は、今は力を蓄える時と告げています。
-    </div>`;
+    </div>
+    ${buildFortune(winPick.card.num, winPick.reversed)}`;
   verdict.classList.remove('hidden');
   document.getElementById('abTapHint').classList.add('hidden');
 
@@ -1424,7 +1601,8 @@ function restoreAB(stored) {
     <div class="verdict-card-note">
       ✦ ${stored.winner}のカード「${winCard.nameJp}」は${winRev?'逆位置':'正位置'}で出ました。<br>
       もう一方の「${loseLabel}」のカード「${loseCard.nameJp}」は、今は力を蓄える時と告げています。
-    </div>`;
+    </div>
+    ${buildFortune(winCard.num, winRev)}`;
   verdict.classList.remove('hidden');
   document.getElementById('abShare').classList.remove('hidden');
   document.getElementById('abCTA').classList.remove('hidden');
