@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>血液型運勢占い | HAPPIRIO</title>
+<meta name="description" content="生年月日・星座・数秘術・血液型RHを組み合わせた本格血液型運勢占い。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500&family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#c9a84c;--gold2:#e8d49a;--gold-dim:rgba(201,168,76,0.25);
+  --bg1:#08011a;--bg2:#110630;--bg3:#1a0a3d;
+  --txt:#f0e8d0;--txt2:rgba(240,232,208,0.6);--txt3:rgba(240,232,208,0.35);
+  --glass:rgba(255,255,255,0.035);--gb:rgba(201,168,76,0.13);
+}
+html{scroll-behavior:smooth}
+body{
+  background:radial-gradient(ellipse at 30% 20%,#1a0635 0%,var(--bg1) 60%),
+             linear-gradient(160deg,var(--bg1),var(--bg2) 50%,var(--bg3));
+  min-height:100vh;color:var(--txt);
+  font-family:'Noto Serif JP',serif;
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:20px 16px 60px;
+}
+
+/* ── Ambient ── */
+#ambient{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.star{position:absolute;background:#fff;border-radius:50%;animation:twinkle 3s infinite alternate}
+@keyframes twinkle{0%{opacity:.1}100%{opacity:.8}}
+.drop{position:absolute;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;animation:fall linear infinite;opacity:0}
+@keyframes fall{0%{transform:translateY(-20px);opacity:0}8%{opacity:.14}92%{opacity:.14}100%{transform:translateY(110vh);opacity:0}}
+
+/* ── App ── */
+.app{position:relative;z-index:10;width:100%;max-width:420px;padding:36px 22px 32px}
+
+/* ── Header ── */
+.logo{text-align:center;margin-bottom:6px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:5px;color:var(--gold);opacity:.88}
+.ttl{text-align:center;margin-bottom:10px}
+.ttl h1{font-size:19px;font-weight:400;letter-spacing:6px;line-height:1.65}
+.ttl .sub{font-size:9px;letter-spacing:3px;color:var(--gold);font-family:'Cinzel',serif;margin-top:4px}
+.gline{width:52px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 28px}
+
+/* ── Screens ── */
+.screen{display:none}.screen.active{display:block}
+
+/* ── Profile Setup ── */
+.setup-intro{text-align:center;margin-bottom:24px}
+.setup-intro p{font-size:12px;line-height:2;color:var(--txt2);letter-spacing:1px}
+.setup-intro .accent{color:var(--gold);font-size:11px;letter-spacing:2px;margin-bottom:8px;display:block}
+
+.field{margin-bottom:18px}
+.field label{display:block;font-size:10px;letter-spacing:3px;color:var(--gold);margin-bottom:9px}
+.field input[type=date],.field input[type=text]{
+  width:100%;padding:12px 14px;
+  background:var(--glass);border:1px solid var(--gold-dim);border-radius:8px;
+  color:var(--txt);font-family:'Noto Serif JP',serif;font-size:14px;
+  outline:none;transition:border-color .25s;
+  color-scheme:dark;
+}
+.field input:focus{border-color:rgba(201,168,76,.55)}
+
+.blood-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:4px}
+.blood-btn{
+  padding:12px 5px;background:var(--glass);
+  border:1px solid var(--gold-dim);border-radius:8px;
+  color:var(--txt);font-family:'Noto Serif JP',serif;
+  font-size:14px;cursor:pointer;transition:all .25s;text-align:center;line-height:1.3;
+}
+.blood-btn:hover{background:rgba(201,168,76,.08);border-color:rgba(201,168,76,.4)}
+.blood-btn.sel{background:rgba(201,168,76,.18);border-color:var(--gold);box-shadow:0 0 12px rgba(201,168,76,.22)}
+.blood-btn .rh{display:block;font-size:9px;color:var(--gold);margin-top:3px;letter-spacing:1px}
+
+.action-btn{
+  width:100%;padding:14px;margin-top:16px;
+  border:1px solid rgba(201,168,76,.42);border-radius:8px;
+  background:rgba(201,168,76,.08);
+  color:var(--txt);font-family:'Noto Serif JP',serif;
+  font-size:13px;cursor:pointer;transition:all .3s;letter-spacing:2px;
+}
+.action-btn:hover:not(:disabled){background:rgba(201,168,76,.18);border-color:var(--gold)}
+.action-btn:disabled{opacity:.3;cursor:not-allowed}
+
+/* ── Profile Card (shown after setup) ── */
+.profile-card{
+  display:flex;align-items:center;gap:12px;padding:14px 16px;
+  background:var(--glass);border:1px solid var(--gold-dim);border-radius:10px;
+  margin-bottom:20px;cursor:pointer;transition:border-color .25s;
+}
+.profile-card:hover{border-color:rgba(201,168,76,.4)}
+.profile-icon{font-size:22px;flex-shrink:0}
+.profile-info{flex:1;min-width:0}
+.profile-name{font-size:13px;color:var(--txt);margin-bottom:3px}
+.profile-meta{font-size:10px;color:var(--txt2);letter-spacing:1px;line-height:1.7}
+.profile-edit{font-size:10px;color:var(--gold);opacity:.6;flex-shrink:0}
+
+/* ── Mode Tabs ── */
+.mode-tabs{display:flex;margin-bottom:20px;border:1px solid var(--gold-dim);border-radius:8px;overflow:hidden}
+.mode-tab{
+  flex:1;padding:11px 6px;background:transparent;border:none;
+  color:var(--txt2);font-family:'Noto Serif JP',serif;
+  font-size:12px;cursor:pointer;transition:all .3s;letter-spacing:1px;
+}
+.mode-tab.active{background:rgba(201,168,76,.11);color:var(--txt);border-bottom:2px solid var(--gold)}
+.mode-tab:hover:not(.active){background:rgba(255,255,255,.03)}
+
+.select-label{font-size:10px;letter-spacing:3px;color:var(--gold);margin-bottom:11px}
+.divider-txt{
+  text-align:center;font-size:10px;color:rgba(201,168,76,.5);
+  letter-spacing:2px;margin:14px 0;position:relative;
+}
+.divider-txt::before,.divider-txt::after{content:'';position:absolute;top:50%;width:33%;height:1px;background:rgba(201,168,76,.15)}
+.divider-txt::before{left:0}.divider-txt::after{right:0}
+
+.already-done{
+  display:none;text-align:center;padding:11px;margin-top:12px;
+  border:1px solid rgba(180,80,80,.28);border-radius:8px;
+  background:rgba(180,80,80,.06);font-size:11px;
+  color:rgba(240,200,200,.65);letter-spacing:1px;line-height:1.9;
+}
+
+/* ── Loading ── */
+#screen-loading{text-align:center;padding:80px 24px}
+.load-sym{font-size:52px;animation:pulse 1.5s ease-in-out infinite;display:block;margin-bottom:24px}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.75}50%{transform:scale(1.18);opacity:1}}
+.load-txt{font-size:12px;letter-spacing:3px;color:var(--gold);animation:fp 2s ease-in-out infinite}
+@keyframes fp{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* ── Result ── */
+.today-note{text-align:center;font-size:10px;color:rgba(201,168,76,.5);letter-spacing:2px;margin-bottom:14px;min-height:14px}
+
+.profile-banner{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;
+  background:var(--glass);border:1px solid var(--gold-dim);border-radius:8px;margin-bottom:16px;
+}
+.pb-zodiac{font-size:24px;flex-shrink:0}
+.pb-info{flex:1}
+.pb-type{font-size:18px;font-weight:500;color:var(--txt);letter-spacing:2px}
+.pb-sub{font-size:10px;color:var(--txt2);letter-spacing:1px;line-height:1.8;margin-top:2px}
+.pb-lp{
+  font-size:11px;color:var(--gold);letter-spacing:1px;
+  border:1px solid var(--gold-dim);border-radius:4px;padding:3px 8px;flex-shrink:0;text-align:center;
+}
+.pb-lp span{display:block;font-size:8px;opacity:.7;letter-spacing:1px}
+
+.section{
+  margin-bottom:16px;padding:15px;
+  border:1px solid var(--gb);border-radius:8px;
+  background:var(--glass);
+}
+.sec-title{font-size:10px;letter-spacing:3px;color:var(--gold);margin-bottom:13px}
+
+.stars-disp{font-size:18px;letter-spacing:5px;color:var(--gold)}
+
+.bar-rows{display:flex;flex-direction:column;gap:10px}
+.bar-row{display:flex;align-items:center;gap:10px}
+.bar-lbl{font-size:10px;color:var(--txt2);width:48px;text-align:right;flex-shrink:0;letter-spacing:1px}
+.bar-track{flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width 1.1s cubic-bezier(.4,0,.2,1);width:0%}
+.bf-love{background:linear-gradient(90deg,#c9608c,#e89abf)}
+.bf-work{background:linear-gradient(90deg,#6c9ac9,#9abfe8)}
+.bf-money{background:linear-gradient(90deg,#c9a84c,#e8d49a)}
+.bf-health{background:linear-gradient(90deg,#4caf7d,#9ae8bb)}
+.bf-total{background:linear-gradient(90deg,#c9a84c,#fff0c0,#c9a84c)}
+.bf-romance{background:linear-gradient(90deg,#c9608c,#e89abf)}
+.bf-biz{background:linear-gradient(90deg,#6c9ac9,#9abfe8)}
+.bf-friend{background:linear-gradient(90deg,#4caf7d,#9ae8bb)}
+
+/* reason box */
+.reason-box{
+  margin-top:12px;padding:10px 12px;
+  background:rgba(201,168,76,.05);border-radius:6px;
+  font-size:10px;color:var(--txt2);line-height:1.9;letter-spacing:.5px;
+}
+.reason-box .r-tag{
+  display:inline-block;font-size:9px;letter-spacing:1px;
+  color:var(--gold);border:1px solid var(--gold-dim);
+  border-radius:3px;padding:1px 6px;margin-right:6px;margin-bottom:4px;
+}
+
+.lucky-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.lucky-item{padding:10px 11px;background:rgba(255,255,255,.035);border-radius:6px}
+.lucky-name{font-size:9px;color:rgba(201,168,76,.6);letter-spacing:2px;margin-bottom:4px}
+.lucky-val{font-size:13px;color:var(--txt)}
+.cdot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
+
+.msg-box{
+  padding:14px 15px;background:rgba(201,168,76,.045);
+  border-left:2px solid var(--gold);border-radius:0 6px 6px 0;
+  font-size:13px;line-height:2.1;color:var(--txt);font-weight:300;
+}
+
+/* compat */
+.compat-hdr{display:flex;justify-content:center;align-items:center;gap:14px;margin-bottom:20px}
+.c-heart{font-size:20px;color:#c9608c}
+.compat-score{text-align:center}
+.heart-row{font-size:19px;letter-spacing:5px;margin-bottom:5px}
+.compat-pct{font-size:34px;font-weight:400;color:var(--gold)}
+.compat-lbl{font-size:10px;color:var(--txt2);letter-spacing:2px;margin-top:3px}
+
+.share-row{display:flex;gap:9px;margin-top:16px}
+.share-btn{
+  flex:1;padding:10px;border-radius:6px;border:1px solid;
+  font-family:'Noto Serif JP',serif;font-size:11px;
+  cursor:pointer;letter-spacing:1px;transition:all .3s;
+}
+.sx{border-color:rgba(255,255,255,.16);background:rgba(0,0,0,.28);color:var(--txt)}
+.sx:hover{background:rgba(0,0,0,.45)}
+.sl{border-color:rgba(0,195,0,.26);background:rgba(0,195,0,.08);color:#9de8a0}
+.sl:hover{background:rgba(0,195,0,.18)}
+
+.cta-box{
+  margin-top:16px;padding:13px;text-align:center;
+  border:1px solid var(--gold-dim);border-radius:8px;
+  background:rgba(201,168,76,.04);
+}
+.cta-box p{font-size:10px;color:var(--txt2);letter-spacing:1px;margin-bottom:6px}
+.cta-link{font-size:11px;color:var(--gold);letter-spacing:2px;text-decoration:none}
+.cta-link:hover{opacity:.75}
+
+.back-btn{
+  display:block;text-align:center;margin-top:16px;
+  font-size:10px;color:rgba(201,168,76,.4);
+  cursor:pointer;letter-spacing:2px;transition:color .2s;
+  background:none;border:none;width:100%;font-family:'Noto Serif JP',serif;
+}
+.back-btn:hover{color:var(--gold)}
+
+@media(max-width:360px){.blood-grid{gap:5px}.blood-btn{font-size:12px;padding:10px 3px}}
+</style>
+</head>
+<body>
+<div id="ambient"></div>
+<div class="app">
+
+  <div class="logo">✦ HAPPIRIO ✦</div>
+  <div class="ttl">
+    <h1>血液型運勢占い</h1>
+    <div class="sub">BLOOD TYPE &amp; SOUL FORTUNE</div>
+  </div>
+  <div class="gline"></div>
+
+  <!-- ===== SCREEN: SETUP ===== -->
+  <div class="screen active" id="screen-setup">
+    <div class="setup-intro">
+      <span class="accent">✦ はじめに ✦</span>
+      <p>生年月日と血液型を登録することで<br>星座・数秘術・血液型を組み合わせた<br>あなただけの運勢を導き出します</p>
+    </div>
+
+    <div class="field">
+      <label>生年月日</label>
+      <input type="date" id="inputBirth" max="2010-12-31" min="1920-01-01">
+    </div>
+
+    <div class="field">
+      <label>血液型</label>
+      <div class="blood-grid" id="setupBloodGrid"></div>
+    </div>
+
+    <div class="field">
+      <label>お名前（ニックネーム可）</label>
+      <input type="text" id="inputName" placeholder="例：のりこ" maxlength="20">
+    </div>
+
+    <button class="action-btn" id="setupBtn" onclick="saveProfile()" disabled>✦ 登録して占いを始める ✦</button>
+  </div>
+
+  <!-- ===== SCREEN: SELECT ===== -->
+  <div class="screen" id="screen-select">
+    <div class="profile-card" onclick="editProfile()" title="プロフィールを編集">
+      <div class="profile-icon" id="pcIcon"></div>
+      <div class="profile-info">
+        <div class="profile-name" id="pcName"></div>
+        <div class="profile-meta" id="pcMeta"></div>
+      </div>
+      <div class="profile-edit">編集</div>
+    </div>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="switchMode('daily')">今日の運勢</button>
+      <button class="mode-tab" onclick="switchMode('compat')">相性占い</button>
+    </div>
+
+    <div id="sel-daily-info" style="font-size:11px;color:var(--txt2);letter-spacing:1px;margin-bottom:14px;line-height:1.9;text-align:center"></div>
+
+    <div id="sel-partner" style="display:none">
+      <p class="select-label">相手の血液型</p>
+      <div class="blood-grid" id="partnerGrid"></div>
+    </div>
+
+    <div class="already-done" id="alreadyDone">
+      本日の運勢占いはすでに完了しています<br>
+      <span style="font-size:10px;opacity:.7">明日またご来訪ください</span>
+    </div>
+
+    <button class="action-btn" id="fortuneBtn" onclick="startFortune()">✦ 占う ✦</button>
+  </div>
+
+  <!-- ===== SCREEN: LOADING ===== -->
+  <div class="screen" id="screen-loading">
+    <span class="load-sym" id="loadSym">🩸</span>
+    <div class="load-txt" id="loadTxt">星の導きを読み解いています...</div>
+  </div>
+
+  <!-- ===== SCREEN: DAILY RESULT ===== -->
+  <div class="screen" id="screen-daily">
+    <div class="today-note" id="todayNote"></div>
+
+    <div class="profile-banner">
+      <div class="pb-zodiac" id="pbZodiac"></div>
+      <div class="pb-info">
+        <div class="pb-type" id="pbType"></div>
+        <div class="pb-sub" id="pbSub"></div>
+      </div>
+      <div class="pb-lp"><span>命数</span><span id="pbLp" style="font-size:16px"></span></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">◈ 総合運</div>
+      <div class="stars-disp" id="totalStars"></div>
+      <div class="bar-track" style="margin-top:10px;height:7px">
+        <div class="bar-fill bf-total" id="totalBar"></div>
+      </div>
+      <div class="reason-box" id="totalReason"></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">◈ 今日の運気</div>
+      <div class="bar-rows">
+        <div class="bar-row"><span class="bar-lbl">恋愛運</span><div class="bar-track"><div class="bar-fill bf-love" id="loveBar"></div></div></div>
+        <div class="bar-row"><span class="bar-lbl">仕事運</span><div class="bar-track"><div class="bar-fill bf-work" id="workBar"></div></div></div>
+        <div class="bar-row"><span class="bar-lbl">金運</span><div class="bar-track"><div class="bar-fill bf-money" id="moneyBar"></div></div></div>
+        <div class="bar-row"><span class="bar-lbl">健康運</span><div class="bar-track"><div class="bar-fill bf-health" id="healthBar"></div></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">◈ ラッキーアイテム</div>
+      <div class="lucky-grid">
+        <div class="lucky-item"><div class="lucky-name">カラー</div><div class="lucky-val" id="lColor"></div></div>
+        <div class="lucky-item"><div class="lucky-name">アイテム</div><div class="lucky-val" id="lItem"></div></div>
+        <div class="lucky-item"><div class="lucky-name">方位</div><div class="lucky-val" id="lDir"></div></div>
+        <div class="lucky-item"><div class="lucky-name">数字</div><div class="lucky-val" id="lNum"></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">◈ 今日のメッセージ</div>
+      <div class="msg-box" id="dailyMsg"></div>
+    </div>
+
+    <div class="share-row">
+      <button class="share-btn sx" onclick="shareX('daily')">𝕏 シェア</button>
+      <button class="share-btn sl" onclick="shareLine('daily')">LINE シェア</button>
+    </div>
+    <div class="cta-box">
+      <p>さらに詳しい開運情報はこちら</p>
+      <a class="cta-link" href="https://happirio.booth.pm" target="_blank" rel="noopener">✦ HAPPIRIO BOOTH ✦</a>
+    </div>
+    <button class="back-btn" onclick="goBack()">← もう一度占う</button>
+  </div>
+
+  <!-- ===== SCREEN: COMPAT RESULT ===== -->
+  <div class="screen" id="screen-compat">
+    <div class="compat-hdr">
+      <div style="text-align:center">
+        <div style="font-size:22px" id="myZodiac2"></div>
+        <div style="font-size:16px;font-weight:500;margin-top:4px" id="myType2"></div>
+        <div style="font-size:9px;color:var(--txt2);margin-top:2px" id="myZName2"></div>
+      </div>
+      <div class="c-heart">♥</div>
+      <div style="text-align:center">
+        <div style="font-size:22px" id="ptZodiac2"></div>
+        <div style="font-size:16px;font-weight:500;margin-top:4px" id="ptType2"></div>
+        <div style="font-size:9px;color:var(--txt2);margin-top:2px" id="ptZName2"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="compat-score">
+        <div class="heart-row" id="heartRow"></div>
+        <div class="compat-pct" id="compatPct"></div>
+        <div class="compat-lbl" id="compatTitle"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">◈ 相性の内訳</div>
+      <div class="bar-rows">
+        <div class="bar-row"><span class="bar-lbl">恋愛</span><div class="bar-track"><div class="bar-fill bf-romance" id="romBar"></div></div></div>
+        <div class="bar-row"><span class="bar-lbl">仕事</span><div class="bar-track"><div class="bar-fill bf-biz" id="bizBar"></div></div></div>
+        <div class="bar-row"><span class="bar-lbl">友人</span><div class="bar-track"><div class="bar-fill bf-friend" id="friBar"></div></div></div>
+      </div>
+      <div class="reason-box" id="compatReason"></div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">◈ 相性コメント</div>
+      <div class="msg-box" id="compatMsg"></div>
+    </div>
+
+    <div class="share-row">
+      <button class="share-btn sx" onclick="shareX('compat')">𝕏 シェア</button>
+      <button class="share-btn sl" onclick="shareLine('compat')">LINE シェア</button>
+    </div>
+    <div class="cta-box">
+      <p>さらに詳しい開運情報はこちら</p>
+      <a class="cta-link" href="https://happirio.booth.pm" target="_blank" rel="noopener">✦ HAPPIRIO BOOTH ✦</a>
+    </div>
+    <button class="back-btn" onclick="goBack()">← もう一度占う</button>
+  </div>
+
+</div><!-- /app -->
+<script>
+'use strict';
+
+/* ══════════════════════════════════════
+   MASTER DATA
+══════════════════════════════════════ */
+const TYPES = ['A+','A−','B+','B−','O+','O−','AB+','AB−'];
+
+const ZODIAC = [
+  {name:'山羊座',en:'Capricorn',emoji:'♑',start:[1,1],end:[1,19],element:'土',keyword:'忍耐・野心・現実'},
+  {name:'水瓶座',en:'Aquarius', emoji:'♒',start:[1,20],end:[2,18],element:'風',keyword:'革新・自由・博愛'},
+  {name:'魚座',  en:'Pisces',   emoji:'♓',start:[2,19],end:[3,20],element:'水',keyword:'直感・夢・共感'},
+  {name:'牡羊座',en:'Aries',    emoji:'♈',start:[3,21],end:[4,19],element:'火',keyword:'情熱・勇気・先駆'},
+  {name:'牡牛座',en:'Taurus',   emoji:'♉',start:[4,20],end:[5,20],element:'土',keyword:'安定・感覚・忠実'},
+  {name:'双子座',en:'Gemini',   emoji:'♊',start:[5,21],end:[6,20],element:'風',keyword:'知性・好奇・変化'},
+  {name:'蟹座',  en:'Cancer',   emoji:'♋',start:[6,21],end:[7,22],element:'水',keyword:'感受・家族・保護'},
+  {name:'獅子座',en:'Leo',      emoji:'♌',start:[7,23],end:[8,22],element:'火',keyword:'創造・誇り・輝き'},
+  {name:'乙女座',en:'Virgo',    emoji:'♍',start:[8,23],end:[9,22],element:'土',keyword:'完璧・分析・奉仕'},
+  {name:'天秤座',en:'Libra',    emoji:'♎',start:[9,23],end:[10,22],element:'風',keyword:'調和・美・公平'},
+  {name:'蠍座',  en:'Scorpio',  emoji:'♏',start:[10,23],end:[11,21],element:'水',keyword:'深淵・変容・意志'},
+  {name:'射手座',en:'Sagittarius',emoji:'♐',start:[11,22],end:[12,21],element:'火',keyword:'冒険・自由・哲学'},
+  {name:'山羊座',en:'Capricorn',emoji:'♑',start:[12,22],end:[12,31],element:'土',keyword:'忍耐・野心・現実'},
+];
+
+const LP_DATA = {
+  1:{name:'独立の数',trait:'リーダー気質・開拓者・強い意志',lucky_mod:[5,0,3,2]},
+  2:{name:'調和の数',trait:'協調性・感受性・外交的',lucky_mod:[0,3,1,5]},
+  3:{name:'創造の数',trait:'表現力・明るさ・芸術的',lucky_mod:[4,2,0,3]},
+  4:{name:'安定の数',trait:'忍耐力・誠実・基盤づくり',lucky_mod:[2,5,2,2]},
+  5:{name:'自由の数',trait:'変化・冒険・多才',lucky_mod:[3,0,4,1]},
+  6:{name:'愛情の数',trait:'責任感・奉仕・美的センス',lucky_mod:[5,2,0,4]},
+  7:{name:'探求の数',trait:'内省・分析・神秘への関心',lucky_mod:[1,3,0,4]},
+  8:{name:'力の数',  trait:'野心・実行力・金運強め',lucky_mod:[0,2,8,0]},
+  9:{name:'完成の数',trait:'慈悲・普遍的愛・奉仕精神',lucky_mod:[3,0,1,5]},
+  11:{name:'マスター11',trait:'直感・霊感・高次のビジョン',lucky_mod:[5,3,2,5]},
+  22:{name:'マスター22',trait:'大きな夢・実現力・世界規模',lucky_mod:[4,5,5,4]},
+  33:{name:'マスター33',trait:'無条件の愛・癒し・指導者',lucky_mod:[5,4,3,5]},
+};
+
+const BLOOD_TRAIT = {
+  'A+':'計画性・誠実・几帳面',  'A−':'繊細・内省・完璧主義',
+  'B+':'自由・直感・エネルギー','B−':'独創・神秘・マイペース',
+  'O+':'社交・リーダー・豪快',  'O−':'直感・孤高・スピリチュアル',
+  'AB+':'知的・柔軟・二面性',   'AB−':'稀有・特別な感受性',
+};
+
+// Element affinity: each zodiac element modifies scores
+const ELEMENT_MOD = {
+  '火':{love:6,work:4,money:2,health:4},
+  '土':{love:2,work:6,money:6,health:2},
+  '風':{love:4,work:4,money:4,health:4},
+  '水':{love:6,work:2,money:2,health:6},
+};
+
+const COLORS=[
+  {n:'深紅',h:'#8b1a1a'},{n:'ロイヤルブルー',h:'#2a4899'},{n:'フォレストグリーン',h:'#2d6a4f'},
+  {n:'パープル',h:'#6a2d8b'},{n:'ゴールド',h:'#c9a84c'},{n:'コーラルピンク',h:'#d4777a'},
+  {n:'ターコイズ',h:'#2a8b8b'},{n:'シルバー',h:'#8b8b9a'},{n:'アイボリー',h:'#d4c9a8'},
+  {n:'インディゴ',h:'#3d3d8b'},{n:'ローズ',h:'#a84c7a'},{n:'オレンジ',h:'#c97a2a'},
+];
+const ITEMS=['水晶','鏡','白い花','赤い糸','金の小物','香木','満月の石','流水音','翡翠','桜の枝','月長石','赤い実'];
+const DIRS=['北','北東','東','南東','南','南西','西','北西'];
+
+// Messages keyed by zodiac element x blood base
+const MSGS = {
+  '火A':['情熱と誠実さが今日のあなたを動かします。計画を持ちながらも、心の炎に従って行動してみて。思わぬ突破口が開く一日です。'],
+  '火B':['自由な火のエネルギーが今日のあなたに宿っています。直感のままに動いて。誰もが驚くような発見があるかもしれません。'],
+  '火O':['リーダーシップと情熱が融合する絶好の日。大きな声で意見を言ってみて。あなたの言葉が場を動かします。'],
+  '火AB':['二つの面を持つあなたに、今日は火の創造性が加わります。新しいアイデアが次々と浮かんでくる、インスピレーションの日です。'],
+  '土A':['安定した土のエネルギーがあなたの誠実さを後押しします。今日積み上げたものは長く続きます。丁寧に、確実に。'],
+  '土B':['自由なあなたに今日は根を張る力が宿ります。一つのことをやり遂げてみて。思った以上の達成感が待っています。'],
+  '土O':['行動力に安定感が加わる今日は、あなたの力が最大限に発揮されます。地道な努力が大きな実を結ぶ予感。'],
+  '土AB':['知性に土台の力が加わります。今日は長期的な計画を立てるのに最適。未来への種まきをする日です。'],
+  '風A':['繊細な風のエネルギーがあなたの感覚を研ぎ澄まします。今日は人の話をよく聞いてみて。大切な情報が届きます。'],
+  '風B':['風と自由の二重奏。今日のあなたは思考が光速で動きます。あちこちへのアンテナを大切に。'],
+  '風O':['社交的なあなたに今日は風の伝達力が加わります。コミュニケーションが鍵。誰かに声をかけてみましょう。'],
+  '風AB':['知性と風のエネルギーが完璧に共鳴する日。多角的な視点が冴え渡り、複雑な状況を一瞬で見通せます。'],
+  '水A':['繊細な水のエネルギーが今日のあなたを包みます。感じたことを信じて。その直感は正しいです。'],
+  '水B':['神秘的なあなたに深い水のエネルギーが加わります。夢の中のメッセージを大切にして。何かが動き出す予感。'],
+  '水O':['おおらかなあなたに今日は深い共感力が宿ります。誰かの悩みを聞いてあげると、不思議なほど良いことが起きます。'],
+  '水AB':['深い感受性と知性が融合する特別な日。水面下で大きなことが動いています。焦らず、流れに乗って。'],
+};
+
+const COMPAT_DATA = {
+  'A+':{'A+':{s:82,r:80,b:88,f:85,t:'安定の同志',c:'同じ価値観を共有するふたり。計画的で誠実な姿勢が互いを支え合い、長期的な安心感をもたらします。'},
+    'A−':{s:78,r:82,b:72,f:78,t:'深い理解者',c:'A型同士の細やかさが共鳴します。言葉にしなくても伝わる、静かで深い絆が育まれます。'},
+    'B+':{s:65,r:70,b:58,f:65,t:'刺激の関係',c:'正反対の性質が引き寄せ合います。違いが摩擦を生むこともありますが、互いを成長させる刺激になります。'},
+    'B−':{s:60,r:65,b:52,f:60,t:'不思議な引力',c:'B−の神秘性にA+が惹かれる関係。お互いの違いを尊重できれば、独特の化学反応が生まれます。'},
+    'O+':{s:75,r:72,b:80,f:76,t:'頼もしいパートナー',c:'O+のリーダーシップをA+がサポートする黄金の組み合わせ。仕事面の相性は特に抜群です。'},
+    'O−':{s:70,r:68,b:74,f:70,t:'尊重の絆',c:'互いの独自性を認め合えるふたり。深い対話を重ねることで特別な信頼関係が生まれます。'},
+    'AB+':{s:72,r:70,b:76,f:72,t:'知的な連携',c:'AB+の柔軟性がA+の硬さをほぐします。知的刺激を与え合える関係です。'},
+    'AB−':{s:68,r:72,b:62,f:68,t:'神秘的な縁',c:'AB−の稀有な感性にA+が魅了されます。縁があれば深い絆になります。'}},
+  'A−':{'A+':{s:78,r:82,b:72,f:78,t:'深い理解者',c:'A−の繊細さをA+が優しく包み込む関係。言葉にしなくても伝わる静かな絆。'},
+    'A−':{s:85,r:88,b:80,f:85,t:'魂の共鳴',c:'繊細な感受性が完璧に共鳴するふたり。言葉より沈黙が心地よい、魂レベルのつながりです。'},
+    'B+':{s:58,r:62,b:50,f:58,t:'異世界からの訪問者',c:'B+の明るさがA−の内的世界に光をもたらします。互いの違いが新鮮な体験を生み出します。'},
+    'B−':{s:72,r:78,b:62,f:72,t:'神秘の共鳴',c:'繊細さと神秘性が共鳴する深い関係。その絆は外からは見えにくいですが強固です。'},
+    'O+':{s:62,r:60,b:66,f:62,t:'補い合う力',c:'O+のおおらかさがA−の緊張をほぐします。違いを活かせればバランスの取れた関係が生まれます。'},
+    'O−':{s:75,r:80,b:66,f:75,t:'深淵の共鳴',c:'どちらも内面に深みを持つふたり。言葉少なくとも深く通じ合える関係。'},
+    'AB+':{s:70,r:72,b:68,f:70,t:'知的な共鳴',c:'芸術や哲学を共に語り合える知的パートナーシップ。'},
+    'AB−':{s:80,r:85,b:70,f:80,t:'稀有な出会い',c:'AB−の特別な感性とA−の内省が溶け合い、ふたりだけの空間を作り出します。'}},
+  'B+':{'A+':{s:65,r:70,b:58,f:65,t:'刺激の関係',c:'正反対が引き合う関係。衝突もありますが、それがお互いの成長につながります。'},
+    'A−':{s:58,r:62,b:50,f:58,t:'異世界からの訪問者',c:'B+の明るさがA−の世界に新風を吹き込みます。理解し合うには時間が必要ですが、その価値はあります。'},
+    'B+':{s:88,r:85,b:82,f:90,t:'最高の共鳴',c:'自由な魂同士が共鳴するエネルギッシュな関係。互いの自由を尊重しながら高め合えるベストパートナー。'},
+    'B−':{s:70,r:75,b:62,f:72,t:'不思議な引き合い',c:'B+の陽気さとB−の神秘性が面白い化学反応を起こします。常に新しい発見のある関係。'},
+    'O+':{s:82,r:80,b:80,f:85,t:'エネルギーの爆発',c:'二人が出会うとエネルギーが倍増します。共に行動することで大きな成果を生み出すダイナミックなコンビ。'},
+    'O−':{s:62,r:65,b:58,f:62,t:'対照の美',c:'O−の深さとB+の軽やかさが対照的に美しい。互いにない部分を補い合いながらゆっくりと関係が深まります。'},
+    'AB+':{s:78,r:76,b:80,f:78,t:'知的な冒険',c:'AB+の多角的視点とB+の直感が融合すると驚くようなアイデアが生まれます。一緒にいると毎日が冒険です。'},
+    'AB−':{s:68,r:72,b:60,f:68,t:'神秘への好奇心',c:'AB−の稀有な存在感にB+が好奇心を持ちます。探求し続ける関係で飽きることがありません。'}},
+  'B−':{'A+':{s:60,r:65,b:52,f:60,t:'不思議な引力',c:'A+の誠実さとB−の神秘性が引き合います。深く理解し合えれば独特の美しい関係が育ちます。'},
+    'A−':{s:72,r:78,b:62,f:72,t:'神秘の共鳴',c:'ふたりの内なる世界が共鳴する深い関係。外の世界に縛られない独自の価値観を共有します。'},
+    'B+':{s:70,r:75,b:62,f:72,t:'不思議な引き合い',c:'明るさと神秘が共存する面白い組み合わせ。お互いの世界を覗き合うような好奇心がふたりを結びつけます。'},
+    'B−':{s:80,r:82,b:72,f:80,t:'神秘の鏡',c:'神秘的な魂同士が深く共鳴します。他の誰も立ち入れないふたりだけの深遠な世界を共有できます。'},
+    'O+':{s:60,r:58,b:62,f:60,t:'火と水の関係',c:'O+の行動力とB−の内省が極端に異なります。しかし違いを楽しめる成熟があれば特別な絆に。'},
+    'O−':{s:78,r:82,b:68,f:78,t:'深淵の絆',c:'孤高の魂同士が引き合う神秘的な関係。世間から少し離れた場所でふたりだけの深い絆を育みます。'},
+    'AB+':{s:72,r:70,b:74,f:72,t:'神秘と知性の融合',c:'AB+の知性がB−の神秘性と融合すると不思議な魅力を持つ関係になります。'},
+    'AB−':{s:88,r:90,b:78,f:88,t:'宿命の出会い',c:'二つの稀有な魂が出会う宿命的な関係。互いの魂を映し合う、かけがえのない絆です。'}},
+  'O+':{'A+':{s:75,r:72,b:80,f:76,t:'頼もしいパートナー',c:'O+のリーダーシップとA+のサポート力が完璧に噛み合います。'},
+    'A−':{s:62,r:60,b:66,f:62,t:'補い合う力',c:'O+のおおらかさがA−の緊張をほぐし、A−の細やかさがO+を整えます。'},
+    'B+':{s:82,r:80,b:80,f:85,t:'エネルギーの爆発',c:'ふたり合わさるとパワーが倍になる活力あふれる組み合わせ。'},
+    'B−':{s:60,r:58,b:62,f:60,t:'火と水の関係',c:'異なる世界観を持つふたり。深い対話ができれば特別な絆に。'},
+    'O+':{s:78,r:75,b:82,f:80,t:'王者の共鳴',c:'強いリーダー同士の組み合わせ。目標を共にした時の力は絶大です。'},
+    'O−':{s:70,r:68,b:74,f:70,t:'違う光の輝き',c:'O+の社交性とO−の孤高が補い合い、バランスの取れた関係が築けます。'},
+    'AB+':{s:80,r:78,b:84,f:80,t:'力強い連携',c:'O+の行動力とAB+の思考力が組み合わさると最強コンビに。'},
+    'AB−':{s:72,r:70,b:74,f:72,t:'稀有な出会い',c:'O+のエネルギーがAB−の世界に活力を与え、AB−の感性がO+に新しい視点をもたらします。'}},
+  'O−':{'A+':{s:70,r:68,b:74,f:70,t:'尊重の絆',c:'互いの独自性を認め合い、干渉しすぎない心地よい関係が育ちます。'},
+    'A−':{s:75,r:80,b:66,f:75,t:'深淵の共鳴',c:'どちらも深い内面を持つふたり。沈黙の中でも通じ合える魂の次元での繋がり。'},
+    'B+':{s:62,r:65,b:58,f:62,t:'対照の美',c:'異なるエネルギーが引き合います。B+の明るさがO−の深みに光を当てます。'},
+    'B−':{s:78,r:82,b:68,f:78,t:'深淵の絆',c:'神秘的な感性を持つ者同士の深い絆。ふたりだけにしかわからない言葉で語り合えます。'},
+    'O+':{s:70,r:68,b:74,f:70,t:'違う光の輝き',c:'O+の陽気さとO−の沈着さが絶妙なバランスを生み出します。'},
+    'O−':{s:82,r:85,b:75,f:82,t:'孤高の共鳴',c:'孤独を好む魂同士が互いにとって唯一の理解者になる関係。世界にふたりきりでも十分と思えるような深い絆。'},
+    'AB+':{s:74,r:72,b:76,f:74,t:'深遠な連携',c:'AB+の知性とO−の直感が融合する深みのある関係。'},
+    'AB−':{s:85,r:88,b:76,f:85,t:'魂の鏡',c:'AB−の深淵な世界とO−の孤高が共鳴し、他では得られない特別な絆を育みます。'}},
+  'AB+':{'A+':{s:72,r:70,b:76,f:72,t:'知的な連携',c:'AB+の柔軟さがA+の硬さをほぐし、知的刺激を与え合える関係。'},
+    'A−':{s:70,r:72,b:68,f:70,t:'知的な共鳴',c:'芸術や哲学を語り合える知的パートナー。AB+がA−の内省を外へと引き出します。'},
+    'B+':{s:78,r:76,b:80,f:78,t:'知的な冒険',c:'多角的視点と鋭い直感が掛け合わさると素晴らしいアイデアが生まれます。'},
+    'B−':{s:72,r:70,b:74,f:72,t:'神秘と知性の融合',c:'AB+の知性がB−の神秘性に魅了される、相互に高め合える関係。'},
+    'O+':{s:80,r:78,b:84,f:80,t:'力強い連携',c:'行動力と思考力が組み合わさる最強コンビ。'},
+    'O−':{s:74,r:72,b:76,f:74,t:'深遠な連携',c:'知性と直感が補い合う深みのある関係。互いにない視点を提供し合います。'},
+    'AB+':{s:85,r:82,b:88,f:85,t:'知の饗宴',c:'互いの多面性を完全に理解し合える稀有な組み合わせ。話し始めると止まらない。'},
+    'AB−':{s:80,r:82,b:78,f:80,t:'稀有な共鳴',c:'AB同士の知性と感性が共鳴。世界を独自の視点で見るふたりが互いの見方を豊かに広げ合います。'}},
+  'AB−':{'A+':{s:68,r:72,b:62,f:68,t:'神秘的な縁',c:'AB−の稀有な感性にA+が魅了されます。縁があれば深い絆になります。'},
+    'A−':{s:80,r:85,b:70,f:80,t:'稀有な出会い',c:'繊細な感性同士の深い共鳴。ふたりだけの静かな世界を共有できます。'},
+    'B+':{s:68,r:72,b:60,f:68,t:'神秘への好奇心',c:'B+がAB−の神秘に好奇心を持つ関係。探求し続けることで深みが生まれます。'},
+    'B−':{s:88,r:90,b:78,f:88,t:'宿命の出会い',c:'稀有な魂同士が出会う宿命的な関係。互いの深淵な世界を完全に理解できる唯一の存在かもしれません。'},
+    'O+':{s:72,r:70,b:74,f:72,t:'稀有な出会い',c:'O+のエネルギーがAB−の世界に活力を与え、AB−の感性がO+に深みをもたらします。'},
+    'O−':{s:85,r:88,b:76,f:85,t:'魂の鏡',c:'孤高と深淵が出会う宿命的な関係。互いに世界で唯一の理解者となれる特別な絆。'},
+    'AB+':{s:80,r:82,b:78,f:80,t:'稀有な共鳴',c:'AB同士の知性と感性が深く共鳴する関係。ふたりだけの独自な世界観を築き上げます。'},
+    'AB−':{s:92,r:92,b:85,f:92,t:'運命の共鳴',c:'世界に極めて少ないAB−同士の出会いはまさに運命。互いの稀有な感性が完璧に共鳴し、この世界にふたりだけの特別な宇宙を生み出します。'}},
+};
+
+/* ══════════════════════════════════════
+   CALCULATION UTILITIES
+══════════════════════════════════════ */
+function getZodiac(month, day) {
+  for (const z of ZODIAC) {
+    const [sm,sd]=z.start, [em,ed]=z.end;
+    if ((month===sm&&day>=sd)||(month===em&&day<=ed)) return z;
+  }
+  return ZODIAC[0];
+}
+
+function calcLifePath(dateStr) {
+  const digits = dateStr.replace(/-/g,'').split('').map(Number);
+  let sum = digits.reduce((a,b)=>a+b,0);
+  // Master numbers
+  while(sum>9 && sum!==11 && sum!==22 && sum!==33) {
+    sum = String(sum).split('').map(Number).reduce((a,b)=>a+b,0);
+  }
+  return sum;
+}
+
+function seededRng(seed) {
+  let s = Math.abs(seed)|0;
+  return () => { s=(s*9301+49297)%233280; return s/233280; };
+}
+
+function today() { return new Date().toISOString().slice(0,10); }
+
+/* ══════════════════════════════════════
+   STORAGE
+══════════════════════════════════════ */
+const SK_PROFILE = 'happirio_profile_v2';
+const SK_FORTUNE = 'happirio_fortune_v2';
+
+function saveStorage(key,data){ try{localStorage.setItem(key,JSON.stringify(data))}catch(e){} }
+function loadStorage(key){ try{return JSON.parse(localStorage.getItem(key))}catch(e){return null} }
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let profile = loadStorage(SK_PROFILE); // {name,birth,blood}
+let setupBlood = null;
+let partnerBlood = null;
+let currentMode = 'daily';
+let lastResult = null;
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+function initAmbient(){
+  const a=document.getElementById('ambient');
+  for(let i=0;i<72;i++){
+    const s=document.createElement('div');s.className='star';
+    const sz=Math.random()*2.2+0.6;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*4}s;animation-duration:${2+Math.random()*4}s`;
+    a.appendChild(s);
+  }
+  for(let i=0;i<14;i++){
+    const d=document.createElement('div');d.className='drop';
+    const h=9+Math.random()*14;
+    d.style.cssText=`width:${3+Math.random()*3}px;height:${h}px;left:${Math.random()*100}%;background:#7a1010;animation-delay:${Math.random()*9}s;animation-duration:${7+Math.random()*7}s`;
+    a.appendChild(d);
+  }
+}
+
+function buildBloodGrid(containerId, stateKey, onSelect) {
+  const grid=document.getElementById(containerId);
+  grid.innerHTML='';
+  TYPES.forEach(t=>{
+    const btn=document.createElement('button');
+    btn.className='blood-btn';btn.id=`${stateKey}_${t}`;
+    const base=t.replace('+','').replace('−','');
+    const rh=t.includes('+')?'RH+':'RH−';
+    btn.innerHTML=`<strong>${base}型</strong><span class="rh">${rh}</span>`;
+    btn.onclick=()=>onSelect(t,stateKey);
+    grid.appendChild(btn);
+  });
+}
+
+function selectBloodBtn(type, stateKey) {
+  TYPES.forEach(t=>{
+    const el=document.getElementById(`${stateKey}_${t}`);
+    if(el) el.classList.toggle('sel',t===type);
+  });
+}
+
+/* ══════════════════════════════════════
+   SETUP SCREEN
+══════════════════════════════════════ */
+buildBloodGrid('setupBloodGrid','setup',(t)=>{
+  setupBlood=t; selectBloodBtn(t,'setup'); checkSetupBtn();
+});
+
+document.getElementById('inputBirth').addEventListener('change',checkSetupBtn);
+document.getElementById('inputName').addEventListener('input',checkSetupBtn);
+
+function checkSetupBtn(){
+  const ok = document.getElementById('inputBirth').value && setupBlood;
+  document.getElementById('setupBtn').disabled = !ok;
+}
+
+function saveProfile(){
+  const birth=document.getElementById('inputBirth').value;
+  const name=document.getElementById('inputName').value.trim()||'あなた';
+  if(!birth||!setupBlood) return;
+  profile={name,birth,blood:setupBlood};
+  saveStorage(SK_PROFILE,profile);
+  initSelectScreen();
+  showScreen('screen-select');
+}
+
+function editProfile(){
+  if(!profile) return;
+  // Pre-fill
+  document.getElementById('inputBirth').value=profile.birth;
+  document.getElementById('inputName').value=profile.name;
+  setupBlood=profile.blood;
+  selectBloodBtn(profile.blood,'setup');
+  checkSetupBtn();
+  showScreen('screen-setup');
+}
+
+/* ══════════════════════════════════════
+   SELECT SCREEN
+══════════════════════════════════════ */
+buildBloodGrid('partnerGrid','partner',(t)=>{
+  partnerBlood=t; selectBloodBtn(t,'partner'); refreshFortuneBtn();
+});
+
+function initSelectScreen(){
+  if(!profile) return;
+  const parts=profile.birth.split('-');
+  const m=parseInt(parts[1]),d=parseInt(parts[2]);
+  const zod=getZodiac(m,d);
+  const lp=calcLifePath(profile.birth);
+  const lpd=LP_DATA[lp]||LP_DATA[1];
+
+  document.getElementById('pcIcon').textContent=zod.emoji;
+  document.getElementById('pcName').textContent=profile.name+'さん';
+  document.getElementById('pcMeta').textContent=
+    `${zod.name}（${zod.element}のエレメント）　${profile.blood}型\n命数${lp}「${lpd.name}」`;
+
+  const dailyInfo=document.getElementById('sel-daily-info');
+  dailyInfo.textContent=`${zod.keyword} × ${BLOOD_TRAIT[profile.blood]}`;
+
+  refreshFortuneBtn();
+}
+
+function switchMode(mode){
+  currentMode=mode;
+  document.querySelectorAll('.mode-tab').forEach((t,i)=>{
+    t.classList.toggle('active',(i===0&&mode==='daily')||(i===1&&mode==='compat'));
+  });
+  document.getElementById('sel-partner').style.display=mode==='compat'?'block':'none';
+  document.getElementById('alreadyDone').style.display='none';
+  refreshFortuneBtn();
+}
+
+function refreshFortuneBtn(){
+  const btn=document.getElementById('fortuneBtn');
+  const ad=document.getElementById('alreadyDone');
+  if(currentMode==='daily'){
+    const saved=loadStorage(SK_FORTUNE);
+    if(saved&&saved.date===today()&&saved.blood===profile?.blood){
+      ad.style.display='block';
+      btn.disabled=false;
+      btn.textContent='✦ 今日の結果を見る ✦';
+    } else {
+      ad.style.display='none';
+      btn.disabled=false;
+      btn.textContent='✦ 今日の運勢を占う ✦';
+    }
+  } else {
+    btn.disabled=!partnerBlood;
+    btn.textContent='✦ 相性を占う ✦';
+    ad.style.display='none';
+  }
+}
+
+/* ══════════════════════════════════════
+   FORTUNE CALCULATION
+══════════════════════════════════════ */
+function calcDailyFortune(){
+  const saved=loadStorage(SK_FORTUNE);
+  if(saved&&saved.date===today()&&saved.blood===profile.blood) return saved.result;
+
+  const parts=profile.birth.split('-');
+  const m=parseInt(parts[1]),d=parseInt(parts[2]);
+  const zod=getZodiac(m,d);
+  const lp=calcLifePath(profile.birth);
+  const lpd=LP_DATA[lp]||LP_DATA[1];
+  const em=ELEMENT_MOD[zod.element];
+  const dateNum=parseInt(today().replace(/-/g,''),10);
+  const typeIdx=TYPES.indexOf(profile.blood);
+  const rng=seededRng(dateNum+typeIdx*1000+lp*100);
+
+  // Base scores influenced by element + LP
+  const base=Math.floor(rng()*20)+60;
+  const lm=lpd.lucky_mod;
+  const scores={
+    total: Math.min(99,base+Math.floor(rng()*10)),
+    love:  Math.min(99,base+em.love +lm[0]+Math.floor(rng()*10)),
+    work:  Math.min(99,base+em.work +lm[1]+Math.floor(rng()*10)),
+    money: Math.min(99,base+em.money+lm[2]+Math.floor(rng()*10)),
+    health:Math.min(99,base+em.health+lm[3]+Math.floor(rng()*10)),
+  };
+
+  // Lucky items seeded by date+type
+  const ci=Math.floor(rng()*COLORS.length);
+  const ii=Math.floor(rng()*ITEMS.length);
+  const di=Math.floor(rng()*DIRS.length);
+  const num=Math.floor(rng()*9)+1;
+
+  // Message: element x blood base
+  const bloodBase=profile.blood.replace('+','').replace('−','');
+  const msgKey=zod.element+bloodBase;
+  const msgArr=MSGS[msgKey]||MSGS['風A'];
+  const msg=msgArr[Math.floor(rng()*msgArr.length)];
+
+  // Reason text
+  const reason=`${zod.emoji}${zod.name}（${zod.element}）× ${profile.blood}型 × 命数${lp}「${lpd.name}」\n${zod.keyword}のエネルギーと${lpd.trait}が今日の運気を形成しています。`;
+
+  const result={scores,color:COLORS[ci],item:ITEMS[ii],direction:DIRS[di],number:num,message:msg,reason,zod,lp};
+  saveStorage(SK_FORTUNE,{date:today(),blood:profile.blood,result});
+  return result;
+}
+
+/* ══════════════════════════════════════
+   SCREEN CONTROL
+══════════════════════════════════════ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function startFortune(){
+  if(currentMode==='daily') runDaily();
+  else runCompat();
+}
+
+function runDaily(){
+  showScreen('screen-loading');
+  document.getElementById('loadSym').textContent='🩸';
+  document.getElementById('loadTxt').textContent='星の導きを読み解いています...';
+  setTimeout(()=>{
+    const r=calcDailyFortune();
+    lastResult={mode:'daily',r};
+
+    const parts=profile.birth.split('-');
+    const m=parseInt(parts[1]),d=parseInt(parts[2]);
+    const zod=r.zod||getZodiac(m,d);
+    const lp=r.lp||calcLifePath(profile.birth);
+    const lpd=LP_DATA[lp]||LP_DATA[1];
+
+    document.getElementById('todayNote').textContent='✦ 本日の運勢 ✦';
+    document.getElementById('pbZodiac').textContent=zod.emoji;
+    document.getElementById('pbType').textContent=profile.blood+'型';
+    document.getElementById('pbSub').textContent=`${zod.name}・${zod.element}　${BLOOD_TRAIT[profile.blood]}`;
+    document.getElementById('pbLp').textContent=lp;
+
+    const s=r.scores;
+    const stars=Math.round(s.total/20);
+    document.getElementById('totalStars').textContent='★'.repeat(stars)+'☆'.repeat(5-stars);
+    document.getElementById('totalReason').innerHTML=
+      `<span class="r-tag">${zod.emoji} ${zod.name}</span><span class="r-tag">命数${lp}</span><span class="r-tag">${profile.blood}型</span><br>${r.reason.split('\n')[1]||''}`;
+
+    showScreen('screen-daily');
+    setTimeout(()=>{
+      document.getElementById('totalBar').style.width=s.total+'%';
+      document.getElementById('loveBar').style.width=s.love+'%';
+      document.getElementById('workBar').style.width=s.work+'%';
+      document.getElementById('moneyBar').style.width=s.money+'%';
+      document.getElementById('healthBar').style.width=s.health+'%';
+    },80);
+
+    const c=r.color;
+    document.getElementById('lColor').innerHTML=`<span class="cdot" style="background:${c.h}"></span>${c.n}`;
+    document.getElementById('lItem').textContent=r.item;
+    document.getElementById('lDir').textContent=r.direction;
+    document.getElementById('lNum').textContent=r.number;
+    document.getElementById('dailyMsg').textContent=r.message;
+  },1900);
+}
+
+function runCompat(){
+  if(!partnerBlood) return;
+  showScreen('screen-loading');
+  document.getElementById('loadSym').textContent='♥';
+  document.getElementById('loadTxt').textContent='縁の糸を辿っています...';
+  setTimeout(()=>{
+    const cd=COMPAT_DATA[profile.blood][partnerBlood];
+    lastResult={mode:'compat',cd};
+
+    const parts=profile.birth.split('-');
+    const m=parseInt(parts[1]),d=parseInt(parts[2]);
+    const myZod=getZodiac(m,d);
+
+    document.getElementById('myZodiac2').textContent=myZod.emoji;
+    document.getElementById('myType2').textContent=profile.blood+'型';
+    document.getElementById('myZName2').textContent=myZod.name;
+
+    // Partner zodiac: use blood index as rough proxy for display
+    const ptIdx=TYPES.indexOf(partnerBlood)%12;
+    const ptZod=ZODIAC[ptIdx]||ZODIAC[0];
+    document.getElementById('ptZodiac2').textContent=ptZod.emoji;
+    document.getElementById('ptType2').textContent=partnerBlood+'型';
+    document.getElementById('ptZName2').textContent='';
+
+    const hearts=Math.round(cd.s/20);
+    document.getElementById('heartRow').textContent='♥'.repeat(hearts)+'♡'.repeat(5-hearts);
+    document.getElementById('compatPct').textContent=cd.s+'%';
+    document.getElementById('compatTitle').textContent=cd.t;
+
+    // Element affinity reason
+    const myEl=myZod.element;
+    const elNote=`${myZod.emoji}${myZod.name}（${myEl}）× ${profile.blood}型と${partnerBlood}型の組み合わせ`;
+    document.getElementById('compatReason').innerHTML=
+      `<span class="r-tag">${profile.blood}型</span><span class="r-tag">${partnerBlood}型</span><span class="r-tag">${myZod.name}</span><br>${elNote}`;
+
+    document.getElementById('compatMsg').textContent=cd.c;
+
+    showScreen('screen-compat');
+    setTimeout(()=>{
+      document.getElementById('romBar').style.width=cd.r+'%';
+      document.getElementById('bizBar').style.width=cd.b+'%';
+      document.getElementById('friBar').style.width=cd.f+'%';
+    },80);
+  },1900);
+}
+
+function goBack(){ showScreen('screen-select'); refreshFortuneBtn(); }
+
+/* ══════════════════════════════════════
+   SHARE
+══════════════════════════════════════ */
+function shareX(mode){
+  let text='';
+  if(mode==='daily'&&lastResult){
+    const s=lastResult.r.scores;
+    text=`【血液型運勢占い】${profile.name}さん（${profile.blood}型）の今日の運勢\n総合運:${s.total}点 恋愛運:${s.love}点\nラッキーカラー:${lastResult.r.color.n}\n\n#Happirio #血液型占い #開運`;
+  } else if(mode==='compat'&&lastResult){
+    text=`【血液型相性占い】${profile.blood}型×${partnerBlood}型\n相性度:${lastResult.cd.s}% 「${lastResult.cd.t}」\n\n#Happirio #血液型相性 #開運`;
+  }
+  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(text)+'&via=Happirio_','_blank','noopener');
+}
+
+function shareLine(mode){
+  let text='';
+  if(mode==='daily'&&lastResult){
+    const s=lastResult.r.scores;
+    text=`${profile.name}さん${profile.blood}型の今日の運勢 総合:${s.total}点 #Happirio`;
+  } else if(mode==='compat'&&lastResult){
+    text=`${profile.blood}型×${partnerBlood}型の相性は${lastResult.cd.s}%「${lastResult.cd.t}」 #Happirio`;
+  }
+  window.open('https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('https://happirio.booth.pm')+'&text='+encodeURIComponent(text),'_blank','noopener');
+}
+
+/* ══════════════════════════════════════
+   BOOT
+══════════════════════════════════════ */
+initAmbient();
+if(profile){
+  initSelectScreen();
+  showScreen('screen-select');
+} else {
+  showScreen('screen-setup');
+}
+</script>
+</body>
+</html>

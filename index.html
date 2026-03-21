@@ -151,6 +151,23 @@ body {
 .card-tarot .card-desc { color: #6858a0; }
 .card-tarot .card-arrow { color: #6838a8; }
 
+/* 血液型カード */
+.card-blood {
+  background: linear-gradient(135deg, #0e0808, #1e0c0c);
+  border: 1px solid #7a1a2a;
+}
+.card-blood::before {
+  background: linear-gradient(135deg, rgba(240,120,120,0.06), transparent);
+}
+.card-blood:hover {
+  box-shadow: 0 8px 30px rgba(220,60,80,0.2);
+  border-color: #c02040;
+}
+.card-blood .card-icon { color: #f08090; }
+.card-blood .card-title { color: #f08090; }
+.card-blood .card-desc { color: #885060; }
+.card-blood .card-arrow { color: #883040; }
+
 /* ホロスコープカード */
 .card-horoscope {
   background: linear-gradient(135deg, #060c1e, #0e1430);
@@ -275,6 +292,15 @@ body {
       <div class="card-body">
         <div class="card-title">星座占い</div>
         <div class="card-desc">12星座の今日の総合・恋愛・仕事運。<br>ラッキーアイテムと行動指針も。</div>
+      </div>
+      <div class="card-arrow">›</div>
+    </a>
+
+    <a class="card-link card-blood" href="./blood_fotune/happirio_blood_fortune_v2.html">
+      <div class="card-icon">🩸</div>
+      <div class="card-body">
+        <div class="card-title">血液型占い</div>
+        <div class="card-desc">血液型と生年月日で読み解く今日の運勢。<br>相性占いも楽しめます。</div>
       </div>
       <div class="card-arrow">›</div>
     </a>
