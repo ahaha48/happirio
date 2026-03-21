@@ -241,6 +241,14 @@ body{
 }
 .back-btn:hover{color:var(--gold)}
 
+.nav-top-link{
+  display:block;font-size:10px;color:rgba(201,168,76,.35);
+  text-decoration:none;letter-spacing:2px;transition:color .2s;
+  text-align:left;padding:4px 0;
+}
+.nav-top-link:hover{color:var(--gold)}
+.nav-top-wrap{margin-bottom:12px;}
+
 @media(max-width:360px){.blood-grid{gap:5px}.blood-btn{font-size:12px;padding:10px 3px}}
 
 /* BGMコントロール */
@@ -268,6 +276,9 @@ body{
 <div id="ambient"></div>
 <div class="app">
 
+  <div class="nav-top-wrap">
+    <a href="../index.html" class="nav-top-link">← 占いトップへ</a>
+  </div>
   <div class="logo">✦ HAPPIRIO ✦</div>
   <div class="ttl">
     <h1>血液型運勢占い</h1>
@@ -410,6 +421,7 @@ body{
       </div>
     </div>
     <button class="back-btn" onclick="goBack()">← もう一度占う</button>
+    <a href="../index.html" class="nav-top-link" style="text-align:center;margin-top:8px;">占いトップへ戻る</a>
   </div>
 
   <!-- ===== SCREEN: COMPAT RESULT ===== -->
@@ -477,6 +489,7 @@ body{
       </div>
     </div>
     <button class="back-btn" onclick="goBack()">← もう一度占う</button>
+    <a href="../index.html" class="nav-top-link" style="text-align:center;margin-top:8px;">占いトップへ戻る</a>
   </div>
 
 </div><!-- /app -->
