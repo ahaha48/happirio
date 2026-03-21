@@ -242,9 +242,29 @@ body{
 .back-btn:hover{color:var(--gold)}
 
 @media(max-width:360px){.blood-grid{gap:5px}.blood-btn{font-size:12px;padding:10px 3px}}
+
+/* BGMコントロール */
+.bgm-ctrl{position:fixed;bottom:16px;right:16px;z-index:100;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.bgm-toggle{width:40px;height:40px;border-radius:50%;background:rgba(30,8,8,0.9);border:1px solid #7a1a2a;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:border-color .2s,box-shadow .2s;backdrop-filter:blur(4px)}
+.bgm-toggle:hover{border-color:#f08090;box-shadow:0 0 12px rgba(240,128,144,0.3)}
+.bgm-volume-panel{background:rgba(30,8,8,0.92);border:1px solid #7a1a2a;border-radius:20px;padding:8px 14px;display:flex;align-items:center;gap:8px;backdrop-filter:blur(6px);transition:opacity .2s,transform .2s}
+.bgm-volume-panel.panel-hidden{opacity:0;pointer-events:none;transform:translateY(6px) scale(0.95)}
+.vol-icon{font-size:0.85rem}
+.vol-slider{-webkit-appearance:none;appearance:none;width:90px;height:3px;background:linear-gradient(to right,#c02040 var(--val,35%),#3a1010 var(--val,35%));border-radius:2px;outline:none;cursor:pointer}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#f08090;box-shadow:0 0 6px rgba(240,128,144,0.5);cursor:pointer}
+.vol-pct{font-size:0.65rem;color:#885060;width:26px;text-align:right}
 </style>
 </head>
 <body>
+<audio id="bgm" src="静かにめぐる星占い.mp3" loop></audio>
+<div class="bgm-ctrl">
+  <div class="bgm-volume-panel panel-hidden" id="volPanel">
+    <span class="vol-icon">🔉</span>
+    <input class="vol-slider" id="volSlider" type="range" min="0" max="100" value="35" oninput="onVolChange(this)">
+    <span class="vol-pct" id="volPct">35%</span>
+  </div>
+  <button class="bgm-toggle" id="bgmToggle" onclick="toggleBGM()">🎵</button>
+</div>
 <div id="ambient"></div>
 <div class="app">
 
@@ -966,6 +986,44 @@ function shareLine(mode){
     text=`${profile.blood}型×${partnerBlood}型の相性は${lastResult.cd.s}%「${lastResult.cd.t}」 #Happirio`;
   }
   window.open('https://social-plugins.line.me/lineit/share?url='+encodeURIComponent('https://happirio.booth.pm')+'&text='+encodeURIComponent(text),'_blank','noopener');
+}
+
+/* ══════════════════════════════════════
+   BGM
+══════════════════════════════════════ */
+let bgmStarted = false;
+let bgmMuted = false;
+let volPanelOpen = false;
+const bgmEl = document.getElementById('bgm');
+bgmEl.volume = 0.35;
+function startBGM() {
+  if (bgmStarted) return;
+  bgmStarted = true;
+  bgmEl.play().catch(() => {});
+}
+document.addEventListener('click',      () => startBGM(), { once: true });
+document.addEventListener('touchstart', () => startBGM(), { once: true });
+function toggleBGM() {
+  if (!bgmStarted) startBGM();
+  volPanelOpen = !volPanelOpen;
+  const panel = document.getElementById('volPanel');
+  if (volPanelOpen) {
+    panel.classList.remove('panel-hidden');
+  } else {
+    panel.classList.add('panel-hidden');
+    bgmMuted = !bgmMuted;
+    bgmEl.muted = bgmMuted;
+    document.getElementById('bgmToggle').textContent = bgmMuted ? '🔇' : '🎵';
+  }
+}
+function onVolChange(slider) {
+  const val = parseInt(slider.value);
+  bgmEl.volume = val / 100;
+  bgmEl.muted = false;
+  bgmMuted = false;
+  document.getElementById('bgmToggle').textContent = val === 0 ? '🔇' : '🎵';
+  document.getElementById('volPct').textContent = val + '%';
+  slider.style.setProperty('--val', val + '%');
 }
 
 /* ══════════════════════════════════════
