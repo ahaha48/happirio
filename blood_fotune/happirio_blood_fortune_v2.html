@@ -216,9 +216,22 @@ body{
   border:1px solid var(--gold-dim);border-radius:8px;
   background:rgba(201,168,76,.04);
 }
-.cta-box p{font-size:10px;color:var(--txt2);letter-spacing:1px;margin-bottom:6px}
-.cta-link{font-size:11px;color:var(--gold);letter-spacing:2px;text-decoration:none}
-.cta-link:hover{opacity:.75}
+.cta-box p{font-size:10px;color:var(--txt2);letter-spacing:1px;margin-bottom:10px}
+.cta-links{display:flex;flex-direction:column;gap:8px}
+.cta-link{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:7px;
+  text-decoration:none;transition:opacity .2s;
+}
+.cta-link:hover{opacity:.8}
+.cta-link-booth{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25)}
+.cta-link-note{background:rgba(106,58,155,.12);border:1px solid rgba(140,80,200,.25)}
+.cta-icon{font-size:18px;flex-shrink:0}
+.cta-text{text-align:left;flex:1}
+.cta-title{font-size:11px;letter-spacing:1px;font-weight:bold}
+.cta-title-booth{color:var(--gold)}
+.cta-title-note{color:#b48ee0}
+.cta-desc{font-size:9px;color:var(--txt2);letter-spacing:.5px;margin-top:2px}
+.cta-arrow{font-size:12px;color:var(--txt2);flex-shrink:0}
 
 .back-btn{
   display:block;text-align:center;margin-top:16px;
@@ -356,8 +369,25 @@ body{
       <button class="share-btn sl" onclick="shareLine('daily')">LINE シェア</button>
     </div>
     <div class="cta-box">
-      <p>さらに詳しい開運情報はこちら</p>
-      <a class="cta-link" href="https://happirio.booth.pm" target="_blank" rel="noopener">✦ HAPPIRIO BOOTH ✦</a>
+      <p>〜 Happirio の開運アイテム 〜</p>
+      <div class="cta-links">
+        <a class="cta-link cta-link-booth" href="https://happirio.booth.pm" target="_blank" rel="noopener">
+          <span class="cta-icon">🌸</span>
+          <span class="cta-text">
+            <div class="cta-title cta-title-booth">開運待受画像を手に入れる</div>
+            <div class="cta-desc">あなたのラッキーカラーの待受 ／ BOOTH ¥100〜</div>
+          </span>
+          <span class="cta-arrow">›</span>
+        </a>
+        <a class="cta-link cta-link-note" href="https://note.com/happirio" target="_blank" rel="noopener">
+          <span class="cta-icon">📖</span>
+          <span class="cta-text">
+            <div class="cta-title cta-title-note">今月の開運ガイドを読む</div>
+            <div class="cta-desc">開運カラー解説＋待受画像セット ／ note ¥500〜</div>
+          </span>
+          <span class="cta-arrow">›</span>
+        </a>
+      </div>
     </div>
     <button class="back-btn" onclick="goBack()">← もう一度占う</button>
   </div>
@@ -406,8 +436,25 @@ body{
       <button class="share-btn sl" onclick="shareLine('compat')">LINE シェア</button>
     </div>
     <div class="cta-box">
-      <p>さらに詳しい開運情報はこちら</p>
-      <a class="cta-link" href="https://happirio.booth.pm" target="_blank" rel="noopener">✦ HAPPIRIO BOOTH ✦</a>
+      <p>〜 Happirio の開運アイテム 〜</p>
+      <div class="cta-links">
+        <a class="cta-link cta-link-booth" href="https://happirio.booth.pm" target="_blank" rel="noopener">
+          <span class="cta-icon">🌸</span>
+          <span class="cta-text">
+            <div class="cta-title cta-title-booth">開運待受画像を手に入れる</div>
+            <div class="cta-desc">あなたのラッキーカラーの待受 ／ BOOTH ¥100〜</div>
+          </span>
+          <span class="cta-arrow">›</span>
+        </a>
+        <a class="cta-link cta-link-note" href="https://note.com/happirio" target="_blank" rel="noopener">
+          <span class="cta-icon">📖</span>
+          <span class="cta-text">
+            <div class="cta-title cta-title-note">今月の開運ガイドを読む</div>
+            <div class="cta-desc">開運カラー解説＋待受画像セット ／ note ¥500〜</div>
+          </span>
+          <span class="cta-arrow">›</span>
+        </a>
+      </div>
     </div>
     <button class="back-btn" onclick="goBack()">← もう一度占う</button>
   </div>
