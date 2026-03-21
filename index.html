@@ -242,10 +242,59 @@ body {
   text-decoration: underline;
 }
 
+/* 日付・干支パネル */
+.calendar-panel {
+  width: 100%;
+  text-align: center;
+  padding: 18px 20px;
+  border: 1px solid #2a1a4a;
+  border-radius: 12px;
+  background: rgba(20, 10, 40, 0.5);
+  backdrop-filter: blur(4px);
+}
+.calendar-date {
+  font-size: 1rem;
+  letter-spacing: 0.2em;
+  color: #c0b0e0;
+  margin-bottom: 14px;
+}
+.kanshi-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.kanshi-item {
+  flex: 1;
+  max-width: 100px;
+  background: rgba(60, 30, 90, 0.3);
+  border: 1px solid #3a2060;
+  border-radius: 8px;
+  padding: 8px 4px;
+}
+.kanshi-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  color: #6858a0;
+  margin-bottom: 4px;
+}
+.kanshi-value {
+  font-size: 1.05rem;
+  letter-spacing: 0.1em;
+  color: #d4b8f0;
+  line-height: 1.2;
+}
+.kanshi-read {
+  font-size: 0.6rem;
+  color: #7868a8;
+  letter-spacing: 0.05em;
+  margin-top: 3px;
+}
+
 @media(max-width:380px){
   .brand h1 { font-size: 2.4rem; }
   .card-link { padding: 16px; gap: 14px; }
   .card-icon { font-size: 2rem; width: 44px; }
+  .kanshi-value { font-size: 0.9rem; }
 }
 </style>
 </head>
@@ -263,6 +312,28 @@ body {
       星と縁と神のお告げで<br>
       あなたの今日を照らします
     </p>
+  </div>
+
+  <!-- 日付・干支パネル -->
+  <div class="calendar-panel">
+    <div class="calendar-date" id="calDate"></div>
+    <div class="kanshi-row">
+      <div class="kanshi-item">
+        <div class="kanshi-label">年 干 支</div>
+        <div class="kanshi-value" id="kanYear"></div>
+        <div class="kanshi-read" id="kanYearRead"></div>
+      </div>
+      <div class="kanshi-item">
+        <div class="kanshi-label">月 干 支</div>
+        <div class="kanshi-value" id="kanMonth"></div>
+        <div class="kanshi-read" id="kanMonthRead"></div>
+      </div>
+      <div class="kanshi-item">
+        <div class="kanshi-label">日 干 支</div>
+        <div class="kanshi-value" id="kanDay"></div>
+        <div class="kanshi-read" id="kanDayRead"></div>
+      </div>
+    </div>
   </div>
 
   <div class="divider">無 料 占 い</div>
@@ -421,6 +492,75 @@ body {
   window.addEventListener('resize', resize);
   window.addEventListener('orientationchange', () => setTimeout(resize, 100));
   requestAnimationFrame(draw);
+})();
+
+// 日付・干支表示
+(function() {
+  const KAN      = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  const SHI      = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  const KAN_R    = ['きのえ','きのと','ひのえ','ひのと','つちのえ','つちのと','かのえ','かのと','みずのえ','みずのと'];
+  const SHI_R    = ['ね','うし','とら','う','たつ','み','うま','ひつじ','さる','とり','いぬ','い'];
+  const DOW      = ['日','月','火','水','木','金','土'];
+
+  const now   = new Date();
+  const year  = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const day   = now.getDate();
+
+  // 年干支
+  const yStem   = ((year - 4) % 10 + 10) % 10;
+  const yBranch = ((year - 4) % 12 + 12) % 12;
+
+  // 月干支（節月ベース）
+  // 各節気の開始 [月, 日] と対応する支インデックス・寅月からの月番号
+  const SETSU = [
+    { m:1,  d:6,  b:1,  n:11 }, // 小寒  → 丑月
+    { m:2,  d:4,  b:2,  n:0  }, // 立春  → 寅月
+    { m:3,  d:6,  b:3,  n:1  }, // 啓蟄  → 卯月
+    { m:4,  d:5,  b:4,  n:2  }, // 清明  → 辰月
+    { m:5,  d:6,  b:5,  n:3  }, // 立夏  → 巳月
+    { m:6,  d:6,  b:6,  n:4  }, // 芒種  → 午月
+    { m:7,  d:7,  b:7,  n:5  }, // 小暑  → 未月
+    { m:8,  d:7,  b:8,  n:6  }, // 立秋  → 申月
+    { m:9,  d:8,  b:9,  n:7  }, // 白露  → 酉月
+    { m:10, d:8,  b:10, n:8  }, // 寒露  → 戌月
+    { m:11, d:7,  b:11, n:9  }, // 立冬  → 亥月
+    { m:12, d:7,  b:0,  n:10 }, // 大雪  → 子月
+  ];
+  // デフォルト: 子月後～小寒前（12/7〜1/5）は丑月の前の子月
+  let mBranch = 0, mNumFromTora = 10; // 子月
+  for (let i = SETSU.length - 1; i >= 0; i--) {
+    const s = SETSU[i];
+    if (month > s.m || (month === s.m && day >= s.d)) {
+      mBranch = s.b; mNumFromTora = s.n; break;
+    }
+  }
+  // 月干の基準年（1月〜立春前は前年の干を使う）
+  const effYear = (month === 1 || (month === 2 && day < 4)) ? year - 1 : year;
+  const effYStem = ((effYear - 4) % 10 + 10) % 10;
+  const toraStart = ((effYStem % 5) * 2 + 2) % 10;
+  const mStem = (toraStart + mNumFromTora) % 10;
+
+  // 日干支（基準: 2000/1/1 = 甲戌 = 60サイクル中10番目）
+  const base = new Date(2000, 0, 1);
+  const today = new Date(year, now.getMonth(), day);
+  const diff  = Math.round((today - base) / 86400000);
+  const dIdx  = ((diff + 10) % 60 + 60) % 60;
+  const dStem = dIdx % 10;
+  const dBranch = dIdx % 12;
+
+  // 表示
+  document.getElementById('calDate').textContent =
+    `${year}年${month}月${day}日（${DOW[now.getDay()]}）`;
+
+  document.getElementById('kanYear').textContent    = KAN[yStem] + SHI[yBranch];
+  document.getElementById('kanYearRead').textContent = KAN_R[yStem] + SHI_R[yBranch];
+
+  document.getElementById('kanMonth').textContent    = KAN[mStem] + SHI[mBranch];
+  document.getElementById('kanMonthRead').textContent = KAN_R[mStem] + SHI_R[mBranch];
+
+  document.getElementById('kanDay').textContent    = KAN[dStem] + SHI[dBranch];
+  document.getElementById('kanDayRead').textContent = KAN_R[dStem] + SHI_R[dBranch];
 })();
 </script>
 </body>
