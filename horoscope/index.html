@@ -262,6 +262,35 @@ body {
 }
 .nav-link:hover{color:#a8c0f0;}
 
+/* 結果内ナビ */
+.result-nav{
+  margin-top:20px;border-top:1px solid #1a1a3a;padding-top:16px;
+}
+.result-nav-top{
+  display:block;text-align:center;font-size:0.8rem;color:#506088;
+  text-decoration:none;letter-spacing:0.15em;margin-bottom:14px;
+  transition:color 0.2s;
+}
+.result-nav-top:hover{color:#a8c0f0;}
+.result-nav-label{
+  font-size:0.65rem;color:#303858;letter-spacing:0.2em;
+  text-align:center;margin-bottom:10px;
+}
+.result-nav-menu{
+  display:flex;flex-direction:column;gap:7px;
+}
+.result-nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 13px;
+  border:1px solid #1a1a3a;border-radius:7px;
+  text-decoration:none;transition:border-color 0.2s,background 0.2s;
+  background:rgba(10,10,30,0.4);
+}
+.result-nav-item:hover{border-color:#a8c0f0;background:rgba(20,20,60,0.6);}
+.result-nav-item-icon{font-size:1.1rem;flex-shrink:0;}
+.result-nav-item-name{font-size:0.8rem;letter-spacing:0.1em;color:#8898b8;flex:1;}
+.result-nav-item:hover .result-nav-item-name{color:#a8c0f0;}
+.result-nav-item-arrow{font-size:0.75rem;color:#303858;}
+
 @media(max-width:380px){
   .header h1{font-size:1.6rem;}
   .zodiac-grid{grid-template-columns:repeat(3,1fr);gap:8px;}
@@ -347,6 +376,28 @@ body {
       </div>
 
       <button class="retry-btn" id="retryBtn" onclick="resetAll()">また明日お越しください</button>
+
+      <div class="result-nav">
+        <a href="../index.html" class="result-nav-top">← 占いトップへ戻る</a>
+        <div class="result-nav-label">— 他の占いを試す —</div>
+        <div class="result-nav-menu">
+          <a class="result-nav-item" href="../omikuji/">
+            <span class="result-nav-item-icon">🎋</span>
+            <span class="result-nav-item-name">おみくじ占い</span>
+            <span class="result-nav-item-arrow">›</span>
+          </a>
+          <a class="result-nav-item" href="../tarot/">
+            <span class="result-nav-item-icon">🔮</span>
+            <span class="result-nav-item-name">タロット占い</span>
+            <span class="result-nav-item-arrow">›</span>
+          </a>
+          <a class="result-nav-item" href="../blood_fotune/happirio_blood_fortune_v2.html">
+            <span class="result-nav-item-icon">🩸</span>
+            <span class="result-nav-item-name">血液型占い</span>
+            <span class="result-nav-item-arrow">›</span>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
