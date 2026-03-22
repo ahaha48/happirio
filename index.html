@@ -541,11 +541,11 @@ body {
   const toraStart = ((effYStem % 5) * 2 + 2) % 10;
   const mStem = (toraStart + mNumFromTora) % 10;
 
-  // 日干支（基準: 2000/1/1 = 甲戌 = 60サイクル中10番目）
+  // 日干支（基準: 2000/1/1 = 戊午 = 60サイクル中54番目）
   const base = new Date(2000, 0, 1);
   const today = new Date(year, now.getMonth(), day);
   const diff  = Math.round((today - base) / 86400000);
-  const dIdx  = ((diff + 10) % 60 + 60) % 60;
+  const dIdx  = ((diff + 54) % 60 + 60) % 60;
   const dStem = dIdx % 10;
   const dBranch = dIdx % 12;
 
