@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Happirio — 四柱推命 個別診断書 ご購入</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05091a;
+  --bg2:rgba(255,255,255,.04);
+  --gold:#c9a84c;
+  --gold2:rgba(201,168,76,.18);
+  --rose:#cc8899;
+  --mauve:#7d5882;
+  --w55:rgba(255,255,255,.55);
+  --w35:rgba(255,255,255,.35);
+  --w15:rgba(255,255,255,.12);
+  --border:.5px solid rgba(201,168,76,.25);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:rgba(255,255,255,.85);
+  font-family:'Shippori Mincho B1','Hiragino Mincho ProN','Yu Mincho',serif;
+  font-size:15px;
+  line-height:1.9;
+  min-height:100vh;
+}
+/* 星空背景 */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse at 20% 20%,rgba(100,60,160,.18) 0%,transparent 55%),
+    radial-gradient(ellipse at 80% 80%,rgba(60,30,120,.15) 0%,transparent 55%);
+  pointer-events:none;
+}
+.wrap{max-width:600px;margin:0 auto;padding:2rem 1.25rem 4rem;position:relative;z-index:1;}
+
+/* ヘッダー */
+.site-header{text-align:center;padding:2rem 0 2.5rem;}
+.brand{font-family:'Poppins',sans-serif;font-size:13px;letter-spacing:.5em;color:var(--gold);margin-bottom:.3rem;}
+.header-title{font-size:20px;letter-spacing:.2em;color:rgba(255,255,255,.9);}
+.header-sub{font-size:11px;letter-spacing:.25em;color:var(--w35);margin-top:.3rem;}
+
+/* 命式確認カード */
+.meishiki-card{
+  background:var(--bg2);border:var(--border);border-radius:8px;
+  padding:1.25rem 1.5rem;margin-bottom:1.75rem;
+}
+.meishiki-card-title{font-size:10px;letter-spacing:.4em;color:var(--gold);margin-bottom:.75rem;}
+.meishiki-row{display:flex;flex-wrap:wrap;gap:.5rem .75rem;font-size:13px;color:var(--w55);}
+.meishiki-item span{color:rgba(255,255,255,.85);}
+
+/* フォーム */
+.form-section{margin-bottom:2rem;}
+.form-section-title{font-size:11px;letter-spacing:.35em;color:var(--gold);margin-bottom:1rem;padding-bottom:.4rem;border-bottom:.5px solid var(--gold2);}
+.form-group{margin-bottom:1.1rem;}
+label{display:block;font-size:12px;letter-spacing:.15em;color:var(--w55);margin-bottom:.4rem;}
+.required{color:var(--rose);margin-left:.2rem;font-size:10px;}
+input[type=text],input[type=email],select,textarea{
+  width:100%;
+  background:rgba(255,255,255,.05);
+  border:.5px solid var(--w15);
+  border-radius:4px;
+  padding:.7rem .9rem;
+  color:rgba(255,255,255,.88);
+  font-family:inherit;
+  font-size:14px;
+  outline:none;
+  transition:border-color .2s;
+}
+input[type=text]:focus,input[type=email]:focus,select:focus,textarea:focus{
+  border-color:rgba(201,168,76,.5);
+}
+input::placeholder,textarea::placeholder{color:rgba(255,255,255,.2);}
+select option{background:#0d1230;}
+textarea{height:80px;resize:vertical;line-height:1.7;}
+
+/* 商品サマリー */
+.order-summary{
+  background:linear-gradient(135deg,rgba(30,15,50,.9),rgba(15,8,35,.95));
+  border:var(--border);border-radius:8px;
+  padding:1.5rem;margin-bottom:1.75rem;
+}
+.order-title{font-size:10px;letter-spacing:.4em;color:var(--gold);margin-bottom:1rem;}
+.order-item{display:flex;justify-content:space-between;align-items:baseline;padding:.4rem 0;border-bottom:.5px solid var(--w15);}
+.order-item:last-of-type{border-bottom:none;}
+.order-item-name{font-size:13px;color:var(--w55);}
+.order-item-price{font-size:14px;color:rgba(255,255,255,.85);}
+.order-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:.75rem;padding-top:.75rem;border-top:.5px solid rgba(201,168,76,.3);}
+.order-total-label{font-size:12px;letter-spacing:.15em;color:var(--gold);}
+.order-total-price{font-size:22px;color:#fff;letter-spacing:.05em;}
+
+/* Stripe ボタン */
+.stripe-section{text-align:center;margin-bottom:1.5rem;}
+.stripe-note{font-size:11px;color:var(--w35);margin-bottom:1rem;line-height:1.8;}
+.stripe-btn{
+  display:inline-block;width:100%;
+  padding:1.1rem;
+  background:linear-gradient(135deg,#c9a84c,#a87840);
+  border:none;border-radius:5px;
+  color:#1a0f05;
+  font-size:14px;font-weight:500;
+  letter-spacing:.22em;
+  cursor:pointer;
+  font-family:inherit;
+  transition:opacity .2s,transform .1s;
+}
+.stripe-btn:hover{opacity:.88;transform:translateY(-1px);}
+.stripe-btn:active{transform:translateY(0);}
+.stripe-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+.security-badges{display:flex;justify-content:center;gap:1rem;margin-top:.75rem;flex-wrap:wrap;}
+.badge{font-size:10px;letter-spacing:.12em;color:rgba(255,255,255,.28);border:.5px solid rgba(255,255,255,.1);border-radius:3px;padding:.2rem .5rem;}
+
+/* 完了メッセージ（非表示） */
+.success-card{
+  display:none;
+  text-align:center;
+  background:rgba(100,180,120,.08);
+  border:.5px solid rgba(100,200,130,.25);
+  border-radius:8px;
+  padding:2rem 1.5rem;
+  margin-bottom:1.5rem;
+}
+.success-card.show{display:block;animation:fadeUp .7s ease both;}
+.success-icon{font-size:32px;margin-bottom:.75rem;}
+.success-title{font-size:18px;letter-spacing:.12em;color:rgba(255,255,255,.9);margin-bottom:.5rem;}
+.success-body{font-size:12px;color:var(--w55);line-height:1.9;}
+
+/* フッター */
+.purchase-footer{text-align:center;font-size:10px;letter-spacing:.3em;color:rgba(255,255,255,.18);margin-top:3rem;padding-top:1.5rem;border-top:.5px solid var(--w15);}
+
+/* アニメーション */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ヘッダー -->
+  <header class="site-header">
+    <div class="brand">✦ Happirio ✦</div>
+    <div class="header-title">四柱推命 個別診断書</div>
+    <div class="header-sub">ご購入フォーム</div>
+  </header>
+
+  <!-- 命式確認（URLパラメータから自動セット） -->
+  <div class="meishiki-card" id="meishiki-preview">
+    <div class="meishiki-card-title">ご入力の命式情報</div>
+    <div class="meishiki-row" id="meishiki-row">
+      <div class="meishiki-item">読み込み中...</div>
+    </div>
+  </div>
+
+  <!-- 購入者情報フォーム -->
+  <form id="purchase-form" onsubmit="handleSubmit(event)">
+
+    <div class="form-section">
+      <div class="form-section-title">お客様情報</div>
+
+      <div class="form-group">
+        <label>お名前<span class="required">必須</span></label>
+        <input type="text" id="buyer-name" placeholder="例：山田 花子" required>
+      </div>
+
+      <div class="form-group">
+        <label>メールアドレス<span class="required">必須</span></label>
+        <input type="email" id="buyer-email" placeholder="例：hanako@example.com" required>
+      </div>
+
+      <div class="form-group">
+        <label>メールアドレス（確認）<span class="required">必須</span></label>
+        <input type="email" id="buyer-email2" placeholder="もう一度入力してください" required>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">命式情報の確認</div>
+
+      <div class="form-group">
+        <label>生年月日<span class="required">必須</span></label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="birth-year"  placeholder="年（例：1990）" style="width:30%" required>
+          <input type="text" id="birth-month" placeholder="月（例：4）"    style="width:23%" required>
+          <input type="text" id="birth-day"   placeholder="日（例：15）"   style="width:23%" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>生まれた時間</label>
+        <select id="birth-hour">
+          <option value="">不明</option>
+          <option value="子">子の刻（23〜1時）</option>
+          <option value="丑">丑の刻（1〜3時）</option>
+          <option value="寅">寅の刻（3〜5時）</option>
+          <option value="卯">卯の刻（5〜7時）</option>
+          <option value="辰">辰の刻（7〜9時）</option>
+          <option value="巳">巳の刻（9〜11時）</option>
+          <option value="午">午の刻（11〜13時）</option>
+          <option value="未">未の刻（13〜15時）</option>
+          <option value="申">申の刻（15〜17時）</option>
+          <option value="酉">酉の刻（17〜19時）</option>
+          <option value="戌">戌の刻（19〜21時）</option>
+          <option value="亥">亥の刻（21〜23時）</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>性別</label>
+        <select id="birth-gender">
+          <option value="female">女性（陰）</option>
+          <option value="male">男性（陽）</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>生誕地</label>
+        <input type="text" id="birth-place" placeholder="例：東京、大阪、京都">
+      </div>
+
+      <div class="form-group">
+        <label>ご要望・気になる点（任意）</label>
+        <textarea id="buyer-note" placeholder="例：転職のタイミングが気になっています&#10;結婚運について詳しく知りたいです"></textarea>
+      </div>
+    </div>
+
+    <!-- 注文サマリー -->
+    <div class="order-summary">
+      <div class="order-title">ご注文内容</div>
+      <div class="order-item">
+        <div class="order-item-name">四柱推命 個別診断書（PDF）</div>
+        <div class="order-item-price">¥1,500</div>
+      </div>
+      <div class="order-item">
+        <div class="order-item-name">メール自動送付</div>
+        <div class="order-item-price">無料</div>
+      </div>
+      <div class="order-total">
+        <div class="order-total-label">お支払い合計</div>
+        <div class="order-total-price">¥1,500</div>
+      </div>
+    </div>
+
+    <!-- 決済ボタン -->
+    <div class="stripe-section">
+      <div class="stripe-note">
+        クレジットカード・各種決済に対応しています。<br>
+        ご購入完了後、ご入力のメールアドレスに<br>
+        自動で診断書PDFをお送りします。
+      </div>
+      <button type="submit" class="stripe-btn" id="submit-btn">
+        ✦ &nbsp; 安全に決済して診断書を受け取る &nbsp; ✦
+      </button>
+      <div class="security-badges">
+        <div class="badge">SSL 暗号化通信</div>
+        <div class="badge">Stripe 安全決済</div>
+        <div class="badge">即時メール送付</div>
+      </div>
+    </div>
+
+  </form>
+
+  <!-- 完了メッセージ（決済後に表示） -->
+  <div class="success-card" id="success-card">
+    <div class="success-icon">✦</div>
+    <div class="success-title">ご購入ありがとうございます</div>
+    <div class="success-body">
+      ご入力のメールアドレスに診断書PDFをお送りしました。<br>
+      届かない場合は迷惑メールフォルダもご確認ください。<br><br>
+      Happirio がいつもあなたの開運を応援しています。
+    </div>
+  </div>
+
+  <footer class="purchase-footer">
+    ✦ &nbsp; Happirio &nbsp; ✦ &nbsp; happirio.booth.pm &nbsp; ✦ &nbsp; note.com/happirio &nbsp; ✦
+  </footer>
+
+</div><!-- /wrap -->
+
+<script>
+/* ══════════════════════════════════════
+   URLパラメータから命式情報を自動セット
+══════════════════════════════════════ */
+(function initFromParams(){
+  const p = new URLSearchParams(location.search);
+  const year   = p.get('year')   || '';
+  const month  = p.get('month')  || '';
+  const day    = p.get('day')    || '';
+  const hour   = p.get('hour')   || '';
+  const gender = p.get('gender') || '';
+  const place  = p.get('place')  || '';
+
+  // 命式プレビュー表示
+  const row = document.getElementById('meishiki-row');
+  if(year || month || day){
+    const items = [
+      year  ? `生年：<span>${year}年</span>` : '',
+      month ? `月：<span>${month}月</span>` : '',
+      day   ? `日：<span>${day}日</span>` : '',
+      hour  ? `時刻：<span>${hour}の刻</span>` : '',
+      gender === 'male' ? '性別：<span>男性（陽）</span>' :
+      gender === 'female' ? '性別：<span>女性（陰）</span>' : '',
+      place ? `生誕地：<span>${place}</span>` : '',
+    ].filter(Boolean);
+    row.innerHTML = items.map(i=>`<div class="meishiki-item">${i}</div>`).join('');
+  } else {
+    row.innerHTML = '<div class="meishiki-item" style="color:rgba(255,255,255,.35)">（無料ツールからの引き継ぎ情報はありません）</div>';
+  }
+
+  // フォームフィールドへ自動セット
+  if(year)  document.getElementById('birth-year').value  = year;
+  if(month) document.getElementById('birth-month').value = month;
+  if(day)   document.getElementById('birth-day').value   = day;
+  if(place) document.getElementById('birth-place').value = place;
+  if(gender){
+    const sel = document.getElementById('birth-gender');
+    sel.value = gender === 'male' ? 'male' : 'female';
+  }
+  // 時刻（「子」「丑」などが来る場合）
+  if(hour){
+    const hourSel = document.getElementById('birth-hour');
+    for(let i=0;i<hourSel.options.length;i++){
+      if(hourSel.options[i].value === hour){
+        hourSel.selectedIndex = i;
+        break;
+      }
+    }
+  }
+})();
+
+/* ══════════════════════════════════════
+   フォーム送信処理
+══════════════════════════════════════ */
+function handleSubmit(e){
+  e.preventDefault();
+
+  // バリデーション
+  const name   = document.getElementById('buyer-name').value.trim();
+  const email  = document.getElementById('buyer-email').value.trim();
+  const email2 = document.getElementById('buyer-email2').value.trim();
+
+  if(!name){ alert('お名前を入力してください。'); return; }
+  if(!email){ alert('メールアドレスを入力してください。'); return; }
+  if(email !== email2){ alert('メールアドレスが一致しません。'); return; }
+
+  const year  = document.getElementById('birth-year').value.trim();
+  const month = document.getElementById('birth-month').value.trim();
+  const day   = document.getElementById('birth-day').value.trim();
+  if(!year||!month||!day){ alert('生年月日を入力してください。'); return; }
+
+  // ボタン無効化
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '決済ページへ移動中...';
+
+  // 購入データをまとめる（Stripe決済ページへ渡す）
+  const purchaseData = {
+    name,
+    email,
+    birth_year:  year,
+    birth_month: month,
+    birth_day:   day,
+    birth_hour:  document.getElementById('birth-hour').value,
+    gender:      document.getElementById('birth-gender').value,
+    place:       document.getElementById('birth-place').value.trim(),
+    note:        document.getElementById('buyer-note').value.trim(),
+  };
+
+  // ★ ここを Stripe Payment Link または Stripe Checkout の URL に変更してください
+  // 例: const STRIPE_URL = 'https://buy.stripe.com/XXXXXXXXX';
+  const STRIPE_URL = 'https://buy.stripe.com/YOUR_PAYMENT_LINK_HERE';
+
+  // Stripeのpayment_link にメタデータを付加
+  const params = new URLSearchParams({
+    prefilled_email: email,
+    client_reference_id: btoa(JSON.stringify(purchaseData)).substring(0,100),
+  });
+
+  // ★ 実装時はここを有効化してください
+  // window.location.href = STRIPE_URL + '?' + params.toString();
+
+  // ── デモ用：Stripe URLが未設定の場合は完了画面を表示 ──
+  setTimeout(()=>{
+    document.getElementById('purchase-form').style.display = 'none';
+    document.getElementById('success-card').classList.add('show');
+    window.scrollTo({top:0,behavior:'smooth'});
+
+    // 実際の運用では Make Webhook に purchaseData を POST する
+    // fetch('/api/purchase', { method:'POST', body: JSON.stringify(purchaseData) })
+  }, 1200);
+}
+</script>
+</body>
+</html>

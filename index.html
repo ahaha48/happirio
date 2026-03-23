@@ -185,6 +185,23 @@ body {
 .card-horoscope .card-desc { color: #506088; }
 .card-horoscope .card-arrow { color: #3a4a88; }
 
+/* 四柱推命カード */
+.card-shichusuimei {
+  background: linear-gradient(135deg, #0e0c06, #1e1a08);
+  border: 1px solid #6a5a18;
+}
+.card-shichusuimei::before {
+  background: linear-gradient(135deg, rgba(201,168,76,0.08), transparent);
+}
+.card-shichusuimei:hover {
+  box-shadow: 0 8px 30px rgba(201,168,76,0.2);
+  border-color: #c9a84c;
+}
+.card-shichusuimei .card-icon { color: #e2c97e; }
+.card-shichusuimei .card-title { color: #e2c97e; }
+.card-shichusuimei .card-desc { color: #7a6a38; }
+.card-shichusuimei .card-arrow { color: #8a7030; }
+
 .card-icon {
   font-size: 2.4rem;
   width: 52px;
@@ -372,6 +389,15 @@ body {
       <div class="card-body">
         <div class="card-title">血液型占い</div>
         <div class="card-desc">血液型と生年月日で読み解く今日の運勢。<br>相性占いも楽しめます。</div>
+      </div>
+      <div class="card-arrow">›</div>
+    </a>
+
+    <a class="card-link card-shichusuimei" href="./shichusuimei/">
+      <div class="card-icon">☯</div>
+      <div class="card-body">
+        <div class="card-title">四柱推命</div>
+        <div class="card-desc">生年月日時と生誕地から命式を算出。<br>格局・大運・天冲殺まで本格鑑定。</div>
       </div>
       <div class="card-arrow">›</div>
     </a>
