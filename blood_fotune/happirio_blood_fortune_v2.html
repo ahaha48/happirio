@@ -669,7 +669,17 @@ function seededRng(seed) {
   return () => { s=(s*9301+49297)%233280; return s/233280; };
 }
 
-function today() { return new Date().toISOString().slice(0,10); }
+function today() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+// 日付・血液型・命数からバラツキのあるシードを生成
+function makeDailySeed(dateStr, typeIdx, lp) {
+  const [y, mo, d] = dateStr.split('-').map(Number);
+  let h = ((y - 2020) * 400 + mo * 32 + d) | 0;
+  h = Math.imul(h ^ (h >>> 16), 0x45d9f3b) | 0;
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae3) | 0;
+  h = (h ^ (h >>> 16)) | 0;
+  return Math.abs(h) + typeIdx * 100 + lp;
+}
 
 /* ══════════════════════════════════════
    STORAGE
@@ -835,9 +845,8 @@ function calcDailyFortune(){
   const lp=calcLifePath(profile.birth);
   const lpd=LP_DATA[lp]||LP_DATA[1];
   const em=ELEMENT_MOD[zod.element];
-  const dateNum=parseInt(today().replace(/-/g,''),10);
   const typeIdx=TYPES.indexOf(profile.blood);
-  const rng=seededRng(dateNum+typeIdx*1000+lp*100);
+  const rng=seededRng(makeDailySeed(today(), typeIdx, lp));
 
   // Base scores influenced by element + LP
   const base=Math.floor(rng()*20)+60;
