@@ -596,7 +596,34 @@ function setGender(g){gender=g;document.getElementById('btn-male').classList.tog
 /* ══════════════ 干支計算 ══════════════ */
 function ks(n){n=((n%60)+60)%60;return{kan:JK[n%10],kanR:JKR[n%10],shi:JS[n%12],shiR:JSR[n%12],gk:GK[n%10],gs:GS[n%12],yin:YIN[n%10],n};}
 function cY(y,m){let b=(y-4)%60;if(m<2)b--;return((b%60)+60)%60;}
-function cM(y,m){const a=m<2?y-1:y;return(((a-1900)*12+(m-1)+16)%60+60)%60;}
+
+/* 月柱：太陽黄経ベースの正確な節月計算
+   旧 cM(y,m) は線形近似のため1月前後など節気をまたぐ日付で誤差が出た。
+   新実装は太陽黄経を計算して節月を判定する。 */
+function _jdN(y,m,d){const a=Math.floor((14-m)/12),yy=y+4800-a,mm=m+12*a-3;return d+Math.floor((153*mm+2)/5)+365*yy+Math.floor(yy/4)-Math.floor(yy/100)+Math.floor(yy/400)-32045;}
+function _solLon(jd){
+  const T=(jd-2451545)/36525;
+  const L0=280.46646+36000.76983*T;
+  const M=((357.52911+35999.05029*T-0.0001537*T*T)%360+360)%360;
+  const Mr=M*Math.PI/180;
+  const C=(1.914602-0.004817*T)*Math.sin(Mr)+0.019993*Math.sin(2*Mr)+0.000289*Math.sin(3*Mr);
+  return((L0+C)%360+360)%360;
+}
+function cM(y,m,d){
+  // 正午JST(UTC+9)≒UTC03:00 で黄経計算
+  const lon=_solLon(_jdN(y,m,d)+0.125);
+  // 大雪(255°)を子月の起点として30°ごとに 子丑寅卯辰巳午未申酉戌亥
+  const shiIdx=Math.floor(((lon-255+360)%360)/30)%12;
+  // 立春(寅月=shiIdx 2)より前は前年として年干を求める
+  const tcY=(shiIdx<=1)?y-1:y;
+  const yStem=((tcY-4)%10+10)%10;
+  // 寅月の干: 甲己→丙(2) 乙庚→戊(4) 丙辛→庚(6) 丁壬→壬(8) 戊癸→甲(0)
+  const toraStem=((yStem%5)*2+2)%10;
+  const mStem=(toraStem+(shiIdx-2+12)%12)%10;
+  for(let n=0;n<60;n++)if(n%10===mStem&&n%12===shiIdx)return n;
+  return 0;
+}
+
 function cD(y,m,d){const a=Math.floor((14-m)/12),yy=y-a,mm=m+12*a-2;const jd=d+Math.floor((153*mm+2)/5)+365*yy+Math.floor(yy/4)-Math.floor(yy/100)+Math.floor(yy/400)-32045;return((jd+42)%60+60)%60;}
 function cH(dn,h){return((((dn%5)*2)+Math.floor((h+1)/2)%12)%60+60)%60;}
 function cnt(ps){const c={'木':0,'火':0,'土':0,'金':0,'水':0};ps.forEach(p=>{c[p.gk]++;c[p.gs]++;});return c;}
@@ -988,7 +1015,7 @@ function calculate(){
   const dn=cD(year,month,day);
   const ps=[
     {l:'年　柱',...ks(cY(year,month))},
-    {l:'月　柱',...ks(cM(year,month))},
+    {l:'月　柱',...ks(cM(year,month,day))},
     {l:'日　柱',...ks(dn)},
   ];
   if(correctedHour!==null){
