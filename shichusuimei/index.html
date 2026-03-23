@@ -886,7 +886,7 @@ function getPeriodicKS(){
   const now = new Date();
   const y=now.getFullYear(), m=now.getMonth()+1, d=now.getDate();
   const todayN  = cD(y,m,d);
-  const monthN  = cM(y,m);
+  const monthN  = cM(y,m,d);
   const yearN   = cY(y,m);
   return {
     day:   ks(todayN),
