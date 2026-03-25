@@ -158,12 +158,36 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(1
 .star.lit{color:var(--gold);}
 .star.dim{color:var(--w15);}
 
-.fortune-cats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.5rem;}
+.fortune-cats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;}
 .fcat{background:rgba(5,9,26,.55);border:.5px solid var(--w15);border-radius:3px;padding:12px 8px;text-align:center;}
 .fcat-lbl{font-size:10px;letter-spacing:.1em;color:var(--w40);margin-bottom:6px;}
 .fcat-stars{display:flex;justify-content:center;gap:2px;margin-bottom:4px;}
 .fcat-stars span{font-size:12px;}
 .fcat-word{font-size:12px;color:var(--w70);}
+/* 運勢詳細リスト */
+.fdetail-list{display:flex;flex-direction:column;gap:10px;margin-bottom:1.5rem;}
+.fdetail-item{background:rgba(5,9,26,.55);border:.5px solid var(--w15);border-radius:3px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start;}
+.fdetail-left{flex-shrink:0;text-align:center;width:52px;}
+.fdetail-lbl{font-size:10px;letter-spacing:.1em;color:var(--w40);margin-bottom:5px;}
+.fdetail-stars{display:flex;justify-content:center;gap:1px;}
+.fdetail-stars span{font-size:10px;}
+.fdetail-word{font-size:11px;color:var(--gold);margin-top:3px;}
+.fdetail-right{flex:1;}
+.fdetail-text{font-size:13px;color:var(--w70);line-height:1.85;letter-spacing:.04em;}
+/* 期間プレビュー */
+.period-preview{display:flex;flex-direction:column;gap:12px;margin-bottom:1.25rem;}
+.period-item{border:.5px solid var(--gl);border-radius:3px;padding:14px 16px;background:rgba(201,168,76,.04);}
+.period-item-hd{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.period-item-lbl{font-size:10px;letter-spacing:.2em;color:var(--gold);}
+.period-item-ks{font-family:'Shippori Mincho B1',serif;font-size:15px;font-weight:700;color:var(--w);}
+.period-item-rel{font-size:11px;color:var(--w40);margin-left:auto;}
+.period-item-text{font-size:13px;color:var(--w70);line-height:1.85;}
+.period-item-blur{font-size:12px;color:var(--w40);margin-top:8px;padding-top:8px;border-top:.5px solid var(--w15);letter-spacing:.05em;}
+.period-cta{text-align:center;margin-top:.75rem;}
+.period-cta-link{display:inline-block;padding:10px 24px;background:linear-gradient(135deg,rgba(201,168,76,.25),rgba(201,168,76,.12));border:.5px solid var(--gold);border-radius:24px;font-size:12px;letter-spacing:.15em;color:var(--gold2);text-decoration:none;}
+.period-cta-link:hover{background:linear-gradient(135deg,rgba(201,168,76,.4),rgba(201,168,76,.2));}
+/* 五行関係コメント */
+.gg-relation{background:rgba(13,22,64,.7);border:.5px solid var(--w15);border-left:2px solid rgba(201,168,76,.5);border-radius:3px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:13px;color:var(--w70);line-height:1.9;}
 
 .advice-box{background:rgba(13,22,64,.7);border:.5px solid var(--w15);border-left:2px solid var(--gold);border-radius:3px;padding:1.25rem;margin-bottom:1.5rem;}
 .advice-lbl{font-size:10px;letter-spacing:.2em;color:var(--gold);margin-bottom:8px;}
@@ -373,7 +397,12 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(1
 
       <div class="sh">今日の各運勢</div>
       <div class="fortune-cats" id="fortune-cats"></div>
+
+      <div class="sh">運勢詳細</div>
+      <div class="fdetail-list" id="fortune-detail-list"></div>
     </div>
+
+    <div class="gg-relation" id="gg-relation"></div>
 
     <div id="tcs-today-banner"></div>
 
@@ -386,6 +415,15 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(1
       <span class="cc tl"></span><span class="cc tr"></span><span class="cc bl"></span><span class="cc br"></span>
       <div class="sh">今日のラッキー</div>
       <div class="lgrid" id="today-lucky"></div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem;">
+      <span class="cc tl"></span><span class="cc tr"></span><span class="cc bl"></span><span class="cc br"></span>
+      <div class="sh">今月・今年の流れ（プレビュー）</div>
+      <div class="period-preview" id="period-preview"></div>
+      <div class="period-cta">
+        <a href="purchase.html" class="period-cta-link">✦ 個別鑑定書で詳しく見る ✦</a>
+      </div>
     </div>
   </div>
 
@@ -696,6 +734,88 @@ function todayFortune(pillars, todayKs){
   return scores;
 }
 
+/* ══════════════ 運勢詳細テキスト ══════════════ */
+const FORTUNE_DETAIL={
+  love:{
+    1:'今日は感情が揺れやすく、すれ違いが起きやすい日です。大切な話し合いや告白は別の日に。静かに自分の気持ちを整理する時間に充てましょう。',
+    2:'恋愛面は穏やかな一日。特別な動きはありませんが、焦らず相手のペースに寄り添うことが吉。小さな気遣いが後の信頼につながります。',
+    3:'恋愛運は良好です。素直な言葉をかけることで関係が温まります。新しい出会いにも自然な縁が生まれやすい日です。',
+    4:'恋愛の追い風を感じる日。気になる相手へのアプローチや、パートナーとの大切な提案が好結果につながりやすいでしょう。',
+    5:'恋愛運が絶好調！心が動く出来事や縁のある出会いが訪れそうです。積極的に行動することで、大きな転機になる可能性があります。',
+  },
+  work:{
+    1:'仕事面でミスや行き違いが起きやすい日です。確認作業を怠らず、重要な決断や契約は先送りにする判断も大切です。',
+    2:'仕事は平穏に進む一日。大きな動きより、目の前のタスクをていねいに片付けることが吉。焦りは禁物です。',
+    3:'仕事運は安定しています。計画通りに進められる日。周囲との連携を意識することで、思いのほか良い成果が出るでしょう。',
+    4:'仕事に追い風が吹いています。新しい提案や積極的な行動が評価されやすい日。上司や取引先への一押しが吉です。',
+    5:'仕事運が絶好調！重要な商談、新プロジェクトのスタート、昇進の申し出など、勝負どころで動くと吉。実力を発揮できる日です。',
+  },
+  money:{
+    1:'今日は衝動買いや不要な出費に要注意。財布の紐をしっかり締め、大きな投資判断はいったん保留にしましょう。',
+    2:'金運は穏やかです。無駄遣いさえ控えれば安定した一日。固定費の見直しなど、堅実な行動が吉です。',
+    3:'金運は良好です。コツコツと積み重ねてきた努力が実りやすい日。小さな出費も計画的に動けば問題ありません。',
+    4:'金運に追い風。投資や副業など新しい取り組みが実りやすい運気です。信頼できる情報をもとに行動しましょう。',
+    5:'金運が絶好調！臨時収入や嬉しい知らせが届く可能性があります。大きな決断の実行にも良い日です。',
+  },
+  health:{
+    1:'疲れが出やすい日です。無理をせず早めに休息を。睡眠・食事・水分をていねいに取り、自分のペースを守りましょう。',
+    2:'体調は普通。激しい運動より軽いストレッチや散歩が合っています。心身ともにゆっくりした時間を大切に。',
+    3:'健康運は安定しています。規則正しい生活リズムを保つことで好調を維持できます。予防的なケアが吉。',
+    4:'体調が良好な日。エネルギーを感じたら積極的に体を動かすと運気が高まります。新しい健康習慣のスタートにも最適。',
+    5:'体調絶好調！行動力が増す日です。体力を活かした挑戦や、長期的な健康プランを立てるのに最適なタイミング。',
+  },
+  social:{
+    1:'対人関係でトラブルが起きやすい日。感情的にならず、言葉を慎重に選びましょう。距離を置く判断も賢明です。',
+    2:'人間関係は静かな一日。聞き役に徹することで良い印象を与えられます。自分から動くより相手を立てることが吉。',
+    3:'対人運は安定しています。誠実な対応が周囲からの評価を高めます。困っている人をサポートすると縁が深まります。',
+    4:'対人運が高まっています。大切な人との時間が良い縁を引き寄せます。新しい人脈が広がるチャンスも。',
+    5:'対人運絶好調！新しい出会いや既存の関係が深まる展開がありそうです。積極的に場に出ることで思わぬ幸運が。',
+  },
+};
+
+/* ══════════════ 五行関係コメント ══════════════ */
+const GG_RELATION={
+  '相生':{// myGk generates todayGk
+    '木火':'今日の火の気があなたの木の気を活性化しています。行動すれば成果につながりやすい吉日です。',
+    '火土':'今日の土の気があなたの火の気を受け止め安定させます。表現力・情熱が形になりやすい日。',
+    '土金':'今日の金の気があなたの土の気の成果を引き出します。堅実な努力が評価される日です。',
+    '金水':'今日の水の気があなたの金の気を流し展開を生みます。直感と行動力が噛み合う好日。',
+    '水木':'今日の木の気があなたの水の気を成長に変えます。新しいことを始めるのに良い吉日です。',
+  },
+  '相剋':{// myGk overcomes or is overcome by todayGk
+    '木土':'今日の土の気があなたの木の気に抵抗を生みます。焦らず、しっかり根を張る意識で。',
+    '土水':'今日の水の気があなたの土の気を揺るがします。流されず、軸を持って行動しましょう。',
+    '水火':'今日の火の気があなたの水の気を抑えます。感情や直感より、論理的な判断を優先して。',
+    '火金':'今日の金の気があなたの火の気を鎮めます。勢いより慎重さが結果を生む日です。',
+    '金木':'今日の木の気があなたの金の気に摩擦を生みます。柔軟性を持ちながら芯を保ちましょう。',
+  },
+  '比和':{// same element
+    '木木':'同じ木の気が重なる日。エネルギーが分散しやすいので、優先順位を絞って行動すると吉。',
+    '火火':'火の気が倍増する日。情熱が空回りしないよう、冷静な判断も忘れずに。',
+    '土土':'土の気が重なり安定感が増す日。コツコツとした積み重ねが最も力を発揮します。',
+    '金金':'金の気が重なる日。決断力が高まりますが、過剰な完璧主義には注意。',
+    '水水':'水の気が重なる日。感受性・直感が鋭くなります。ひらめきを大切に行動しましょう。',
+  },
+};
+
+function getGGRelationText(myGk, todayGk){
+  if(myGk===todayGk) return GG_RELATION['比和'][myGk+todayGk]||`${myGk}の気が重なる日。同じエネルギーが巡ります。`;
+  const sosei={'木':'火','火':'土','土':'金','金':'水','水':'木'};
+  const sokoku={'木':'土','土':'水','水':'火','火':'金','金':'木'};
+  if(sosei[myGk]===todayGk) return GG_RELATION['相生'][myGk+todayGk]||`あなたの${myGk}の気が今日の${todayGk}の気を生じさせる吉の流れです。`;
+  if(sosei[todayGk]===myGk) return GG_RELATION['相生'][todayGk+myGk]||`今日の${todayGk}の気があなたの${myGk}の気を育てています。`;
+  return GG_RELATION['相剋'][myGk+todayGk]||GG_RELATION['相剋'][todayGk+myGk]||`${myGk}と${todayGk}の気が交差する日。バランスを意識して行動しましょう。`;
+}
+
+/* ══════════════ 期間プレビューテキスト ══════════════ */
+const PERIOD_SCORE_TEXT={
+  0:'試練の気が巡っています。内省と準備を優先する時期です。',
+  1:'やや重い流れがあります。慎重さと忍耐が鍵になります。',
+  2:'穏やかな流れが続きます。コツコツと積み重ねることで着実な成果につながります。',
+  3:'追い風が吹いています。新しいことに踏み出すのに適した時期です。',
+  4:'充実した運気の時期です。積極的に動くほど良いサイクルが回ります。',
+};
+
 const ADVICE_MAP={
   '甲':['大きな目標を掲げる日です。行動に移すことで運が開けます。','人との繋がりを大切にすると吉。リーダーシップを発揮する場面が来るでしょう。','真っすぐな気持ちで物事に向き合うと良い結果が生まれます。'],
   '乙':['柔軟な対応が幸運を引き寄せます。無理せず流れに乗りましょう。','周囲との協調を意識すると運気アップ。小さな親切が大きな縁を生みます。','計画を丁寧に進める日。慌てず着実に積み重ねることが大切です。'],
@@ -823,7 +943,35 @@ function rToday(ps){
   ];
   document.getElementById('fortune-cats').innerHTML=cats.map(c=>`<div class="fcat"><div class="fcat-lbl">${c.l}</div><div class="fcat-stars">${miniStars(c.n)}</div><div class="fcat-word">${SCORE_WORD[c.n]}</div></div>`).join('');
 
+  // 運勢詳細リスト
+  const detailCats=[
+    {l:'恋愛運',key:'love', n:sc.love},
+    {l:'仕事運',key:'work', n:sc.work},
+    {l:'金運',  key:'money',n:sc.money},
+    {l:'健康運',key:'health',n:sc.health},
+    {l:'対人運',key:'social',n:sc.social},
+  ];
+  document.getElementById('fortune-detail-list').innerHTML=detailCats.map(c=>`
+    <div class="fdetail-item">
+      <div class="fdetail-left">
+        <div class="fdetail-lbl">${c.l}</div>
+        <div class="fdetail-stars">${miniStars(c.n)}</div>
+        <div class="fdetail-word">${SCORE_WORD[c.n]}</div>
+      </div>
+      <div class="fdetail-right">
+        <div class="fdetail-text">${FORTUNE_DETAIL[c.key][c.n]}</div>
+      </div>
+    </div>`).join('');
+
+  // 五行関係コメント
   const dayKan=ps[2];
+  const myGk=dayKan.gk;
+  const todayGk=t.ks.gk;
+  document.getElementById('gg-relation').innerHTML=
+    `<span style="font-size:10px;letter-spacing:.2em;color:var(--gold);display:block;margin-bottom:6px;">✦ 命式×今日の干支</span>`+
+    `あなたの日主は<strong style="color:var(--w)">${dayKan.kan}（${myGk}行）</strong>、今日の干支は<strong style="color:var(--w)">${t.ks.kan}${t.ks.shi}（${todayGk}行）</strong>。`+
+    `${getGGRelationText(myGk,todayGk)}`;
+
   const adviceList=ADVICE_MAP[dayKan.kan]||['今日も一日、丁寧に過ごしましょう。'];
   const seed2=(dayKan.n+t.ks.n)%adviceList.length;
   document.getElementById('advice-text').textContent=adviceList[seed2];
@@ -839,6 +987,32 @@ function rToday(ps){
     {l:'今日の干支',    v:t.ks.kan+t.ks.shi,cls:''},
     {l:'ラッキー季節',  v:L.s,    cls:''},
   ].map(i=>`<div class="litem"><div class="ll">${i.l}</div><div class="lv ${i.cls?'c-'+i.cls:''}">${i.v}</div></div>`).join('');
+
+  // 今月・今年の流れプレビュー
+  const periods=getPeriodicKS();
+  const monthScore=gogyouScore(myGk, periods.month.gk);
+  const yearScore=gogyouScore(myGk, periods.year.gk);
+  const monthScoreIdx=Math.min(4,Math.max(0,monthScore));
+  const yearScoreIdx=Math.min(4,Math.max(0,yearScore));
+  document.getElementById('period-preview').innerHTML=`
+    <div class="period-item">
+      <div class="period-item-hd">
+        <span class="period-item-lbl">今月の運気</span>
+        <span class="period-item-ks">${periods.month.kan}${periods.month.shi}</span>
+        <span class="period-item-rel">${periods.month.gk}行の月</span>
+      </div>
+      <div class="period-item-text">${PERIOD_SCORE_TEXT[monthScoreIdx]}</div>
+      <div class="period-item-blur">▸ 今月の恋愛・仕事・転機の詳しい流れは個別鑑定書に記載しています</div>
+    </div>
+    <div class="period-item">
+      <div class="period-item-hd">
+        <span class="period-item-lbl">今年の運気</span>
+        <span class="period-item-ks">${periods.year.kan}${periods.year.shi}</span>
+        <span class="period-item-rel">${periods.year.gk}行の年</span>
+      </div>
+      <div class="period-item-text">${PERIOD_SCORE_TEXT[yearScoreIdx]}</div>
+      <div class="period-item-blur">▸ 今年の大運・年運・転機の詳細、対策アドバイスは個別鑑定書で</div>
+    </div>`;
 }
 
 /* ══════════════ 天冲殺（空亡）計算 ══════════════
