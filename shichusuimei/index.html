@@ -662,7 +662,7 @@ function cM(y,m,d){
   return 0;
 }
 
-function cD(y,m,d){const a=Math.floor((14-m)/12),yy=y-a,mm=m+12*a-2;const jd=d+Math.floor((153*mm+2)/5)+365*yy+Math.floor(yy/4)-Math.floor(yy/100)+Math.floor(yy/400)-32045;return((jd+42)%60+60)%60;}
+function cD(y,m,d){const diff=Math.round((new Date(y,m-1,d)-new Date(2000,0,1))/86400000);return((diff+54)%60+60)%60;}
 function cH(dn,h){const shiIdx=Math.floor((h+1)/2)%12;const mStem=((dn%5)*2+shiIdx)%10;for(let n=0;n<60;n++)if(n%10===mStem&&n%12===shiIdx)return n;return 0;}
 function cnt(ps){const c={'木':0,'火':0,'土':0,'金':0,'水':0};ps.forEach(p=>{c[p.gk]++;c[p.gs]++;});return c;}
 
